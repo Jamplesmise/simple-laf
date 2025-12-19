@@ -22,10 +22,11 @@ interface SegmentedControlProps {
 }
 
 function SegmentedControl({ options, value, onChange }: SegmentedControlProps) {
+  const { t } = useThemeColors()
   return (
     <div style={{
       display: 'inline-flex',
-      background: '#f3f4f6',
+      background: t.bgMuted,
       borderRadius: 8,
       padding: 3,
     }}>
@@ -35,8 +36,8 @@ function SegmentedControl({ options, value, onChange }: SegmentedControlProps) {
           onClick={() => onChange(opt.value)}
           style={{
             border: 'none',
-            background: value === opt.value ? '#fff' : 'transparent',
-            color: value === opt.value ? '#059669' : '#6b7280',
+            background: value === opt.value ? t.bgCard : 'transparent',
+            color: value === opt.value ? t.accent : t.textSecondary,
             fontWeight: value === opt.value ? 600 : 400,
             fontSize: 12,
             padding: '5px 14px',
@@ -64,6 +65,7 @@ interface FormRowProps {
 }
 
 function FormRow({ item, index, type, isLast, onUpdate, onRemove }: FormRowProps) {
+  const { t } = useThemeColors()
   const [isHovered, setIsHovered] = useState(false)
 
   return (
@@ -74,8 +76,8 @@ function FormRow({ item, index, type, isLast, onUpdate, onRemove }: FormRowProps
         display: 'flex',
         alignItems: 'center',
         height: 40,
-        borderBottom: !isLast ? '1px solid #f3f4f6' : 'none',
-        background: isHovered ? '#f9fafb' : 'transparent',
+        borderBottom: !isLast ? `1px solid ${t.borderLight}` : 'none',
+        background: isHovered ? t.bgMuted : 'transparent',
         transition: 'background 0.15s',
       }}
     >
@@ -83,7 +85,7 @@ function FormRow({ item, index, type, isLast, onUpdate, onRemove }: FormRowProps
       <div style={{
         flex: 1,
         height: '100%',
-        borderRight: '1px solid #f3f4f6',
+        borderRight: `1px solid ${t.borderLight}`,
       }}>
         <input
           type="text"
@@ -99,7 +101,7 @@ function FormRow({ item, index, type, isLast, onUpdate, onRemove }: FormRowProps
             padding: '0 12px',
             fontFamily: codeFont,
             fontSize: 13,
-            color: '#374151',
+            color: t.text,
           }}
         />
       </div>
@@ -120,7 +122,7 @@ function FormRow({ item, index, type, isLast, onUpdate, onRemove }: FormRowProps
             padding: '0 12px',
             fontFamily: codeFont,
             fontSize: 13,
-            color: '#374151',
+            color: t.text,
           }}
         />
       </div>
@@ -164,28 +166,29 @@ interface FormDataEditorProps {
 }
 
 function FormDataEditor({ type, data, onAdd, onUpdate, onRemove }: FormDataEditorProps) {
+  const { t } = useThemeColors()
   const placeholderText = type === 'headers' ? 'Add header...' : type === 'query' ? 'Add param...' : 'Add field...'
 
   return (
     <div style={{
-      background: '#fff',
+      background: t.bgCard,
       borderRadius: 8,
-      border: '1px solid #e5e7eb',
+      border: `1px solid ${t.border}`,
       overflow: 'hidden',
     }}>
       {/* 表头 */}
       <div style={{
         display: 'flex',
-        borderBottom: '1px solid #f3f4f6',
+        borderBottom: `1px solid ${t.borderLight}`,
         padding: '8px 0',
-        background: '#f9fafb',
+        background: t.bgMuted,
       }}>
         <div style={{
           flex: 1,
           paddingLeft: 12,
           fontSize: 11,
           fontWeight: 600,
-          color: '#6b7280',
+          color: t.textSecondary,
           textTransform: 'uppercase',
           letterSpacing: '0.5px',
         }}>
@@ -196,7 +199,7 @@ function FormDataEditor({ type, data, onAdd, onUpdate, onRemove }: FormDataEdito
           paddingLeft: 12,
           fontSize: 11,
           fontWeight: 600,
-          color: '#6b7280',
+          color: t.textSecondary,
           textTransform: 'uppercase',
           letterSpacing: '0.5px',
         }}>
@@ -227,17 +230,17 @@ function FormDataEditor({ type, data, onAdd, onUpdate, onRemove }: FormDataEdito
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          borderTop: '1px dashed #e5e7eb',
-          color: '#9ca3af',
+          borderTop: `1px dashed ${t.border}`,
+          color: t.textMuted,
           fontSize: 12,
           transition: 'color 0.15s, background 0.15s',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.color = '#059669'
-          e.currentTarget.style.background = '#f0fdf4'
+          e.currentTarget.style.color = t.accent
+          e.currentTarget.style.background = t.accentSurface
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.color = '#9ca3af'
+          e.currentTarget.style.color = t.textMuted
           e.currentTarget.style.background = 'transparent'
         }}
       >
@@ -255,11 +258,12 @@ interface TabNavigationProps {
 }
 
 function TabNavigation({ activeTab, onChange }: TabNavigationProps) {
+  const { t } = useThemeColors()
   return (
     <div style={{
       display: 'flex',
       gap: 4,
-      borderBottom: '1px solid #e5e7eb',
+      borderBottom: `1px solid ${t.border}`,
       marginBottom: 16,
     }}>
       {['body', 'query', 'headers'].map(tab => {
@@ -274,15 +278,15 @@ function TabNavigation({ activeTab, onChange }: TabNavigationProps) {
               cursor: 'pointer',
               fontSize: 13,
               fontWeight: isActive ? 600 : 400,
-              color: isActive ? '#059669' : '#6b7280',
+              color: isActive ? t.accent : t.textSecondary,
               position: 'relative',
               transition: 'color 0.15s ease',
             }}
             onMouseEnter={(e) => {
-              if (!isActive) e.currentTarget.style.color = '#374151'
+              if (!isActive) e.currentTarget.style.color = t.text
             }}
             onMouseLeave={(e) => {
-              if (!isActive) e.currentTarget.style.color = '#6b7280'
+              if (!isActive) e.currentTarget.style.color = t.textSecondary
             }}
           >
             {label}
@@ -294,7 +298,7 @@ function TabNavigation({ activeTab, onChange }: TabNavigationProps) {
                 left: 8,
                 right: 8,
                 height: 2,
-                background: '#10B981',
+                background: t.accent,
                 borderRadius: 1,
               }} />
             )}
@@ -355,25 +359,25 @@ export function ParamsEditor({
   onUpdateFormItem,
   onRemoveFormItem,
 }: ParamsEditorProps) {
-  useThemeColors() // for theme consistency
+  const { t } = useThemeColors()
 
   const jsonTextAreaStyle = {
     fontFamily: codeFont,
     fontSize: 13,
     lineHeight: 1.6,
     padding: 12,
-    background: '#fff',
-    borderColor: '#e5e7eb',
+    background: t.bgCard,
+    borderColor: t.border,
     borderRadius: 8,
     resize: 'vertical' as const,
-    color: '#374151',
+    color: t.text,
   }
 
   return (
     <div style={{
-      background: '#fff',
+      background: t.bgCard,
       borderRadius: 10,
-      border: '1px solid #e5e7eb',
+      border: `1px solid ${t.border}`,
       boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
       overflow: 'hidden',
     }}>

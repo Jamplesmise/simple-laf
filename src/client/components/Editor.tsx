@@ -235,14 +235,47 @@ export default function Editor() {
 
   if (!current) {
     return (
-      <div style={{
-        height: '100%',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        color: '#999',
-      }}>
+      <div
+        style={{
+          height: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          color: isDark ? '#666' : '#999',
+          background: isDark ? '#1e1e1e' : '#fff',
+        }}
+        onContextMenu={(e) => {
+          e.preventDefault()
+          setContextMenu({
+            visible: true,
+            x: e.clientX,
+            y: e.clientY
+          })
+        }}
+      >
         请选择或创建一个函数
+        {/* 空状态下的右键菜单 */}
+        <Dropdown
+          menu={{ items: menuItems.filter(item => item.key === 'aiChat') }}
+          open={contextMenu.visible}
+          trigger={['contextMenu']}
+          overlayStyle={{
+            position: 'fixed',
+            left: contextMenu.x,
+            top: contextMenu.y,
+          }}
+        >
+          <div
+            style={{
+              position: 'fixed',
+              left: contextMenu.x,
+              top: contextMenu.y,
+              width: 1,
+              height: 1,
+              pointerEvents: 'none'
+            }}
+          />
+        </Dropdown>
       </div>
     )
   }

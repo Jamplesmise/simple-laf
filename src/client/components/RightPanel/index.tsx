@@ -180,8 +180,8 @@ export default function RightPanel({ onResult }: RightPanelProps) {
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
-      background: '#fff',
-      borderLeft: '1px solid #e5e7eb',
+      background: t.bgCard,
+      borderLeft: `1px solid ${t.border}`,
     }}>
       {/* API 链接 + 发布按钮 */}
       <div style={{
@@ -189,20 +189,20 @@ export default function RightPanel({ onResult }: RightPanelProps) {
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        borderBottom: '1px solid #e5e7eb',
-        background: '#fff',
+        borderBottom: `1px solid ${t.border}`,
+        background: t.bgCard,
       }}>
         <div
           onClick={handleCopy}
           style={{
             flex: 1,
             padding: '6px 10px',
-            background: '#fff',
-            border: '1px solid #e5e7eb',
+            background: t.bgCard,
+            border: `1px solid ${t.border}`,
             borderRadius: 6,
             fontFamily: codeFont,
             fontSize: 12,
-            color: current ? '#374151' : '#9ca3af',
+            color: current ? t.text : t.textMuted,
             cursor: current ? 'pointer' : 'default',
             position: 'relative',
             overflow: 'hidden',
@@ -211,10 +211,10 @@ export default function RightPanel({ onResult }: RightPanelProps) {
             transition: 'border-color 0.2s',
           }}
           onMouseEnter={(e) => {
-            if (current) e.currentTarget.style.borderColor = '#10B981'
+            if (current) e.currentTarget.style.borderColor = t.accent
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = '#e5e7eb'
+            e.currentTarget.style.borderColor = t.border
           }}
         >
           {publicUrl || '选择函数后显示'}
@@ -225,8 +225,8 @@ export default function RightPanel({ onResult }: RightPanelProps) {
               top: '50%',
               transform: 'translateY(-50%)',
               fontSize: 11,
-              color: '#10B981',
-              background: '#fff',
+              color: t.accent,
+              background: t.bgCard,
               padding: '0 4px',
             }}>
               已复制
@@ -259,8 +259,8 @@ export default function RightPanel({ onResult }: RightPanelProps) {
         tabBarStyle={{
           margin: 0,
           padding: '4px 12px 0',
-          background: '#fff',
-          borderBottom: '1px solid #e5e7eb',
+          background: t.bgCard,
+          borderBottom: `1px solid ${t.border}`,
         }}
         items={[
           {
