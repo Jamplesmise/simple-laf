@@ -31,11 +31,9 @@ RUN apk add --no-cache git && npm install -g pnpm typescript typescript-language
 # Configure pnpm mirror
 RUN pnpm config set registry https://registry.npmmirror.com
 
-# Copy package.json
-COPY package.json ./
-
-# Copy node_modules to backup (for volume initialization)
-COPY --from=builder /app/node_modules ./node_modules_backup
+# Copy package files and install production dependencies
+COPY package.json pnpm-lock.yaml* ./
+RUN pnpm install --prod --frozen-lockfile || pnpm install --prod
 
 # Copy build artifacts
 COPY --from=builder /app/dist ./dist
@@ -44,8 +42,11 @@ COPY --from=builder /app/dist ./dist
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
-# Create empty node_modules dir for volume mount
-RUN mkdir -p /app/node_modules
+# Backup node_modules for volume initialization (used by docker-entrypoint.sh)
+RUN cp -r /app/node_modules /app/node_modules_backup
+
+# Recreate empty node_modules for volume mount point
+RUN rm -rf /app/node_modules && mkdir -p /app/node_modules
 
 # Environment
 ENV NODE_ENV=production
