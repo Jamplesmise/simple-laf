@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import http from 'http'
 import path from 'node:path'
+import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { config } from './config.js'
 import { connectDB, getDB } from './db.js'
@@ -101,19 +102,20 @@ app.get('/health', (_req, res) => {
 })
 
 // 生产环境: 托管前端静态文件
-if (process.env.NODE_ENV === 'production') {
-  const publicPath = path.join(__dirname, '..', 'public')
-  app.use(express.static(publicPath))
+const isProduction = process.env.NODE_ENV === 'production'
+const clientDistPath = path.join(__dirname, '..', 'client')
+
+if (isProduction && fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath))
 }
 
 // 公开调用路由 (最后匹配，避免与其他路由冲突)
 app.use(publicRoutes)
 
 // SPA fallback: 所有未匹配的 GET 请求返回 index.html (仅生产环境)
-if (process.env.NODE_ENV === 'production') {
-  const publicPath = path.join(__dirname, '..', 'public')
+if (isProduction && fs.existsSync(clientDistPath)) {
   app.get('*', (_req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'))
+    res.sendFile(path.join(clientDistPath, 'index.html'))
   })
 }
 

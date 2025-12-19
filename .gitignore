@@ -4,16 +4,11 @@ node_modules/
 
 # Build outputs
 dist/
-packages/server/dist/
-packages/web/dist/
-packages/server/public/
 
 # Environment files (NEVER commit these!)
 .env
 .env.local
 .env.*.local
-packages/server/.env
-packages/web/.env
 
 # IDE
 .idea/
@@ -41,12 +36,6 @@ coverage/
 *.tmp
 *.temp
 .cache/
-
-# Artifact files (from failed commands)
-cd
-pnpm
-tsc
-simple-ide@1.0.0
 
 # TypeScript
 *.tsbuildinfo

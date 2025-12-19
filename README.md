@@ -106,18 +106,18 @@ pnpm install
 docker run -d --name mongo -p 27017:27017 mongo:7
 
 # 配置环境变量
-cp .env.example packages/server/.env
+cp .env.example .env
 
-# 启动开发服务器 (两个终端)
-pnpm dev:server    # 后端 http://localhost:3000
-pnpm dev:web       # 前端 http://localhost:5173
+# 启动开发服务器
+pnpm dev              # 后端 http://localhost:3000
+npx vite              # 前端 http://localhost:5173 (另一个终端)
 ```
 
 ### 构建
 
 ```bash
 # 一键构建前后端
-pnpm build
+pnpm build            # 构建到 dist/client 和 dist/server
 
 # 生产模式启动
 pnpm start
@@ -160,24 +160,22 @@ pnpm start
 
 ```
 simple-laf/
-├── packages/
-│   ├── server/           # 后端服务
-│   │   ├── src/
-│   │   │   ├── routes/   # API 路由
-│   │   │   ├── services/ # 业务逻辑
-│   │   │   ├── engine/   # VM 执行引擎
-│   │   │   └── lsp/      # LSP WebSocket
-│   │   └── ...
-│   └── web/              # 前端应用
-│       ├── src/
-│       │   ├── pages/    # 页面
-│       │   ├── components/
-│       │   ├── stores/   # Zustand 状态
-│       │   └── api/      # API 调用
-│       └── ...
+├── src/
+│   ├── server/           # 后端 (Express)
+│   │   ├── routes/       # API 路由
+│   │   ├── services/     # 业务逻辑
+│   │   ├── engine/       # VM 执行引擎
+│   │   └── lsp/          # LSP WebSocket
+│   └── client/           # 前端 (React)
+│       ├── pages/        # 页面
+│       ├── components/   # 组件
+│       ├── stores/       # Zustand 状态
+│       └── api/          # API 调用
+├── index.html            # Vite 入口
+├── vite.config.ts        # Vite 配置
 ├── docker-compose.yml
 ├── Dockerfile
-└── ...
+└── package.json          # 统一依赖
 ```
 
 ## 云函数示例

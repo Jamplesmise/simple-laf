@@ -4,14 +4,14 @@ import monacoEditorPlugin from 'vite-plugin-monaco-editor'
 import path from 'path'
 
 export default defineConfig({
+  root: '.',
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, './src/client'),
     },
   },
   plugins: [
     react(),
-    // Monaco 编辑器插件
     (monacoEditorPlugin as unknown as { default: typeof monacoEditorPlugin }).default({
       languageWorkers: ['editorWorkerService', 'typescript', 'json', 'css', 'html'],
       customWorkers: [],
@@ -34,13 +34,11 @@ export default defineConfig({
       },
     },
   },
-  // Monaco Editor 本地打包配置
   optimizeDeps: {
-    include: [
-      'monaco-editor',
-    ],
+    include: ['monaco-editor'],
   },
   build: {
+    outDir: 'dist/client',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -49,7 +47,6 @@ export default defineConfig({
       },
     },
   },
-  // Worker 文件处理
   worker: {
     format: 'es',
   },
