@@ -50,8 +50,8 @@ export const functionApi = {
 
   get: (id: string) => client.get<SingleResponse>(`/api/functions/${id}`),
 
-  create: (name: string, code: string) =>
-    client.post<SingleResponse>('/api/functions', { name, code }),
+  create: (name: string, code: string, folderId?: string) =>
+    client.post<SingleResponse>('/api/functions', { name, code, folderId }),
 
   update: (id: string, code: string) =>
     client.put<{ success: boolean }>(`/api/functions/${id}`, { code }),

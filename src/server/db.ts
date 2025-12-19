@@ -21,11 +21,12 @@ export async function connectDB(): Promise<void> {
   // 创建索引
   await db.collection('users').createIndex({ username: 1 }, { unique: true })
   await db.collection('functions').createIndex(
-    { userId: 1, name: 1 },
-    { unique: true }
+    { userId: 1, name: 1 }
+    // 注意：不再是唯一索引，允许不同文件夹下存在同名函数
   )
   await db.collection('functions').createIndex(
-    { userId: 1, path: 1 }
+    { userId: 1, path: 1 },
+    { unique: true }  // path 是唯一的，保证完整路径不重复
   )
   await db.collection('functions').createIndex(
     { path: 1, published: 1 }

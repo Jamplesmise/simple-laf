@@ -231,11 +231,9 @@ export default function FunctionTree({ onRefresh }: FunctionTreeProps) {
           }
         }
 
-        const res = await functionApi.create(funcName, DEFAULT_CODE)
+        // 直接创建函数到目标文件夹（后端会计算正确的 path）
+        const res = await functionApi.create(funcName, DEFAULT_CODE, targetFolderId)
         if (res.data.success) {
-          if (targetFolderId) {
-            await folderApi.moveFunction(res.data.data._id, targetFolderId)
-          }
           if (expandKeys.length > 0) {
             tree.setExpandedKeys(prev => [...new Set([...prev, ...expandKeys])])
           }

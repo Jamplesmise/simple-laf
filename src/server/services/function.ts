@@ -35,17 +35,33 @@ export async function list(userId: string): Promise<CloudFunction[]> {
 export async function create(
   userId: string,
   name: string,
-  code: string
+  code: string,
+  folderId?: string
 ): Promise<CloudFunction> {
   const db = getDB()
   const now = new Date()
 
+  // 计算完整路径
+  let path = name
+  let folderOid: ObjectId | undefined
+  if (folderId) {
+    folderOid = new ObjectId(folderId)
+    const folder = await db.collection('folders').findOne({
+      _id: folderOid,
+      userId: new ObjectId(userId)
+    })
+    if (folder) {
+      path = `${folder.path}/${name}`
+    }
+  }
+
   const doc = {
     name,
-    path: name,  // 初始路径等于函数名，移动到文件夹时会更新
+    path,
     code,
     compiled: '',
     userId: new ObjectId(userId),
+    folderId: folderOid,
     published: true,
     createdAt: now,
     updatedAt: now

@@ -29,7 +29,7 @@ router.get('/', async (req: AuthRequest, res) => {
 // 创建函数
 router.post('/', async (req: AuthRequest, res) => {
   try {
-    const { name, code } = req.body
+    const { name, code, folderId } = req.body
 
     if (!name) {
       res.status(400).json({
@@ -43,7 +43,8 @@ router.post('/', async (req: AuthRequest, res) => {
     const func = await functionService.create(
       req.user!.userId,
       name,
-      actualCode
+      actualCode,
+      folderId
     )
 
     // 记录审计日志
