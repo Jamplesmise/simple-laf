@@ -1,5 +1,5 @@
 import { FunctionConsole } from './console.js'
-import { loadModule, setExecutionContext, clearExecutionContext, preloadUserFunctions } from './module.js'
+import { loadModule, runWithContextAsync, preloadUserFunctions, type ExecutionContext } from './module.js'
 import type { Cloud } from '../cloud/index.js'
 
 /**
@@ -34,6 +34,7 @@ export interface ExecuteResult {
 
 /**
  * 执行云函数
+ * 使用 AsyncLocalStorage 确保并发请求间的上下文隔离
  * @param name 函数名
  * @param code 编译后的 JS 代码
  * @param hash 代码哈希
@@ -55,26 +56,32 @@ export async function executeFunction(
   // 注入自定义 console
   global.console = functionConsole as unknown as Console
 
+  // 创建执行上下文
+  const userId = ctx.userId || 'default'
+  const executionContext: ExecutionContext = {
+    cloud: ctx.cloud,
+    userId
+  }
+
   try {
-    // 设置执行上下文（支持 @/functionName 导入）
-    const userId = ctx.userId || 'default'
-    setExecutionContext(ctx.cloud, userId)
+    // 使用 AsyncLocalStorage 包装执行，确保上下文隔离
+    const result = await runWithContextAsync(executionContext, async () => {
+      // 预加载用户的所有函数（支持函数间导入）
+      if (ctx.userId) {
+        await preloadUserFunctions(ctx.userId)
+      }
 
-    // 预加载用户的所有函数（支持函数间导入）
-    if (ctx.userId) {
-      await preloadUserFunctions(ctx.userId)
-    }
+      // 加载模块
+      const mod = loadModule(name, code, hash)
+      const fn = mod.default
 
-    // 加载模块
-    const mod = loadModule(name, code, hash)
-    const fn = mod.default
+      if (typeof fn !== 'function') {
+        throw new Error('函数必须导出 default function')
+      }
 
-    if (typeof fn !== 'function') {
-      throw new Error('函数必须导出 default function')
-    }
-
-    // 执行函数
-    const result = await Promise.resolve(fn(ctx))
+      // 执行函数
+      return await Promise.resolve(fn(ctx))
+    })
 
     return {
       data: result,
@@ -91,9 +98,8 @@ export async function executeFunction(
       error: error.message,
     }
   } finally {
-    // 清除执行上下文
-    clearExecutionContext()
     // 恢复原始 console
+    // 注意：执行上下文会随 AsyncLocalStorage.run 结束自动清理，无需手动清除
     global.console = originalConsole
   }
 }
