@@ -21,16 +21,28 @@ export async function connectDB(): Promise<void> {
   // 创建索引
   await db.collection('users').createIndex({ username: 1 }, { unique: true })
 
-  // 迁移：删除旧的唯一索引 (userId, name)，改为非唯一索引
+  // 迁移：处理索引变更
   try {
     const existingIndexes = await db.collection('functions').indexes()
-    const oldIndex = existingIndexes.find(
+
+    // 删除旧的唯一索引 (userId, name)，改为非唯一索引
+    const oldNameIndex = existingIndexes.find(
       (idx: { key?: { userId?: number; name?: number }; unique?: boolean }) =>
         idx.key?.userId === 1 && idx.key?.name === 1 && idx.unique === true
     )
-    if (oldIndex) {
+    if (oldNameIndex) {
       await db.collection('functions').dropIndex('userId_1_name_1')
       console.log('已删除旧的唯一索引 userId_1_name_1')
+    }
+
+    // 删除旧的非唯一索引 (userId, path)，改为唯一索引
+    const oldPathIndex = existingIndexes.find(
+      (idx: { key?: { userId?: number; path?: number }; unique?: boolean; name?: string }) =>
+        idx.key?.userId === 1 && idx.key?.path === 1 && !idx.unique && idx.name === 'userId_1_path_1'
+    )
+    if (oldPathIndex) {
+      await db.collection('functions').dropIndex('userId_1_path_1')
+      console.log('已删除旧的非唯一索引 userId_1_path_1')
     }
   } catch {
     // 索引不存在，忽略
