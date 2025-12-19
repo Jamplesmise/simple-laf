@@ -70,19 +70,19 @@ export function DebugPanel({
   onUpdateFormItem,
   onRemoveFormItem,
 }: DebugPanelProps) {
-  useThemeColors() // for theme consistency
+  const { t } = useThemeColors()
   const [paramsTab, setParamsTab] = useState('body')
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#fff' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: t.bgCard }}>
       {/* 请求方法和按钮 */}
       <div style={{
         padding: '10px 12px',
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        borderBottom: '1px solid #e5e7eb',
-        background: '#fff',
+        borderBottom: `1px solid ${t.border}`,
+        background: t.bgCard,
       }}>
         <Select
           value={method}
@@ -119,7 +119,7 @@ export function DebugPanel({
         flex: 1,
         overflow: 'auto',
         padding: 12,
-        background: '#f9fafb',
+        background: t.bgMuted,
       }}>
         <ParamsEditor
           paramsTab={paramsTab}
