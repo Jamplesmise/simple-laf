@@ -5,6 +5,7 @@ import { executeFunction } from '../engine/executor.js'
 import { createCloudWithEnv } from '../cloud/index.js'
 import * as executionLogService from '../services/executionLog.js'
 import { isTokenAuthEnabled, validateToken } from '../services/apiToken.js'
+import { invokeLimiter } from '../middleware/rateLimit.js'
 
 const router: IRouter = Router()
 
@@ -13,7 +14,7 @@ const router: IRouter = Router()
  * 支持多级路径，如 /api/user/login
  * 如果函数不存在，调用 next() 让 SPA fallback 处理
  */
-router.all('/*', async (req: Request, res: Response, next: NextFunction) => {
+router.all('/*', invokeLimiter, async (req: Request, res: Response, next: NextFunction) => {
   // 获取完整路径，去除前导斜杠
   const path = req.params[0] || req.path.slice(1)
 
