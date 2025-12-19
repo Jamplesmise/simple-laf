@@ -1,4 +1,5 @@
 import vm from 'node:vm'
+import { AsyncLocalStorage } from 'node:async_hooks'
 import type { Cloud } from '../cloud/index.js'
 import { functionCache, type FunctionData } from './cache.js'
 
@@ -16,46 +17,70 @@ export interface FunctionModule {
 const moduleCache = new Map<string, FunctionModule>()
 
 /**
- * 当前执行上下文
+ * 执行上下文
  */
-interface ExecutionContext {
-  cloud: Cloud | null
-  userId: string | null
-}
-
-let currentContext: ExecutionContext = {
-  cloud: null,
-  userId: null
+export interface ExecutionContext {
+  cloud: Cloud
+  userId: string
 }
 
 /**
- * 设置当前执行上下文
+ * 使用 AsyncLocalStorage 实现请求隔离的执行上下文
+ * 每个请求链有独立的上下文，不会被并发请求覆盖
  */
-export function setExecutionContext(cloud: Cloud, userId: string): void {
-  currentContext = { cloud, userId }
+const executionContextStorage = new AsyncLocalStorage<ExecutionContext>()
+
+/**
+ * 获取当前执行上下文
+ */
+export function getExecutionContext(): ExecutionContext | undefined {
+  return executionContextStorage.getStore()
 }
 
 /**
- * 清除当前执行上下文
+ * 在指定上下文中执行函数
+ * @param context 执行上下文
+ * @param fn 要执行的函数
  */
+export function runWithContext<T>(context: ExecutionContext, fn: () => T): T {
+  return executionContextStorage.run(context, fn)
+}
+
+/**
+ * 在指定上下文中执行异步函数
+ * @param context 执行上下文
+ * @param fn 要执行的异步函数
+ */
+export async function runWithContextAsync<T>(context: ExecutionContext, fn: () => Promise<T>): Promise<T> {
+  return executionContextStorage.run(context, fn)
+}
+
+// 以下为兼容旧 API 的函数（已废弃，但保留避免破坏性变更）
+// 这些函数在并发环境下不安全，应使用 runWithContext 替代
+
+/** @deprecated 使用 runWithContext 替代 */
+export function setExecutionContext(_cloud: Cloud, _userId: string): void {
+  // no-op，使用 runWithContext 替代
+}
+
+/** @deprecated 使用 runWithContext 替代 */
 export function clearExecutionContext(): void {
-  currentContext = { cloud: null, userId: null }
+  // no-op，上下文会随 AsyncLocalStorage.run 结束自动清理
 }
 
-// 兼容旧 API
-export function setCurrentCloud(cloud: Cloud): void {
-  currentContext.cloud = cloud
+/** @deprecated 使用 runWithContext 替代 */
+export function setCurrentCloud(_cloud: Cloud): void {
+  // no-op，使用 runWithContext 替代
 }
 
+/** @deprecated 使用 runWithContext 替代 */
 export function clearCurrentCloud(): void {
-  currentContext.cloud = null
+  // no-op
 }
 
-/**
- * 设置当前用户ID
- */
-export function setCurrentUserId(userId: string): void {
-  currentContext.userId = userId
+/** @deprecated 使用 runWithContext 替代 */
+export function setCurrentUserId(_userId: string): void {
+  // no-op，使用 runWithContext 替代
 }
 
 /**
@@ -78,10 +103,11 @@ function compileModule(
   hash: string,
   fromModules: string[] = []
 ): FunctionModule {
-  const userId = currentContext.userId
-  if (!userId) {
+  const context = getExecutionContext()
+  if (!context?.userId) {
     throw new Error('执行上下文未设置用户ID')
   }
+  const userId = context.userId
 
   const cacheKey = getModuleCacheKey(userId, name)
 
@@ -136,14 +162,15 @@ function compileModule(
  * 支持 @/functionName 导入其他云函数
  */
 function customRequire(id: string, fromModules: string[] = []): unknown {
-  const userId = currentContext.userId
+  const context = getExecutionContext()
+  const userId = context?.userId
 
   // 1. 支持 @simple-ide/cloud 或 @/cloud-sdk
   if (id === '@simple-ide/cloud' || id === '@/cloud-sdk') {
-    if (!currentContext.cloud) {
+    if (!context?.cloud) {
       throw new Error('Cloud SDK 未初始化')
     }
-    return { default: currentContext.cloud, __esModule: true }
+    return { default: context.cloud, __esModule: true }
   }
 
   // 2. 支持 @/functionName 导入
@@ -259,7 +286,8 @@ export function loadModule(
   code: string,
   hash: string
 ): FunctionModule {
-  const userId = currentContext.userId || 'default'
+  const context = getExecutionContext()
+  const userId = context?.userId || 'default'
   const cacheKey = getModuleCacheKey(userId, name)
 
   // 检查缓存
@@ -278,7 +306,8 @@ export function loadModule(
  */
 export function clearCache(name?: string): void {
   if (name) {
-    const userId = currentContext.userId || 'default'
+    const context = getExecutionContext()
+    const userId = context?.userId || 'default'
     moduleCache.delete(getModuleCacheKey(userId, name))
   } else {
     moduleCache.clear()
