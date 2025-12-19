@@ -231,11 +231,9 @@ export default function FunctionTree({ onRefresh }: FunctionTreeProps) {
           }
         }
 
-        const res = await functionApi.create(funcName, DEFAULT_CODE)
+        // 直接创建函数到目标文件夹（后端会计算正确的 path）
+        const res = await functionApi.create(funcName, DEFAULT_CODE, targetFolderId)
         if (res.data.success) {
-          if (targetFolderId) {
-            await folderApi.moveFunction(res.data.data._id, targetFolderId)
-          }
           if (expandKeys.length > 0) {
             tree.setExpandedKeys(prev => [...new Set([...prev, ...expandKeys])])
           }
@@ -248,10 +246,13 @@ export default function FunctionTree({ onRefresh }: FunctionTreeProps) {
         if (selectedNode?.isFolder) {
           await folderApi.rename(selectedNode.key, inputValue.trim())
         } else if (selectedNode) {
-          message.info('函数重命名功能暂未实现')
-          setModalOpen(false)
-          setConfirmLoading(false)
-          return
+          const res = await functionApi.rename(selectedNode.key, inputValue.trim())
+          if (!res.data.success) {
+            message.error('重命名失败')
+            setModalOpen(false)
+            setConfirmLoading(false)
+            return
+          }
         }
         message.success('已重命名')
       }

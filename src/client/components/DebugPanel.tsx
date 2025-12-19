@@ -54,7 +54,7 @@ export default function DebugPanel() {
         return
       }
 
-      const invokeResult = await invokeApi.run(current.name, body)
+      const invokeResult = await invokeApi.run(current.path || current.name, body)
       setResult(invokeResult)
     } catch {
       message.error('执行失败')

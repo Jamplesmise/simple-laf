@@ -296,22 +296,19 @@ export async function deleteObjects(bucket: string, keys: string[]): Promise<voi
 
   const client = getClient()
 
-  console.log('[S3 DELETE] bucket:', bucket, 'keys:', keys)
-
   // S3 批量删除限制 1000 个
   const batchSize = 1000
   for (let i = 0; i < keys.length; i += batchSize) {
     const batch = keys.slice(i, i + batchSize)
-    const result = await client.send(
+    await client.send(
       new DeleteObjectsCommand({
         Bucket: bucket,
         Delete: {
           Objects: batch.map((key) => ({ Key: key })),
-          Quiet: false, // 返回删除结果
+          Quiet: true, // 不返回删除结果，提高性能
         },
       })
     )
-    console.log('[S3 DELETE] result:', JSON.stringify(result))
   }
 }
 

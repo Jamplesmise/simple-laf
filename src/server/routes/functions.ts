@@ -29,7 +29,7 @@ router.get('/', async (req: AuthRequest, res) => {
 // 创建函数
 router.post('/', async (req: AuthRequest, res) => {
   try {
-    const { name, code } = req.body
+    const { name, code, folderId } = req.body
 
     if (!name) {
       res.status(400).json({
@@ -43,7 +43,8 @@ router.post('/', async (req: AuthRequest, res) => {
     const func = await functionService.create(
       req.user!.userId,
       name,
-      actualCode
+      actualCode,
+      folderId
     )
 
     // 记录审计日志
@@ -266,11 +267,13 @@ router.post('/:id/publish', async (req: AuthRequest, res) => {
       },
     })
 
+    // 使用 path（如果有）否则用 name
+    const funcPath = (func as unknown as { path?: string }).path || func.name
     res.json({
       success: true,
       data: {
         version: version.version,
-        url: `/${func.name}`,
+        url: `/${funcPath}`,
         publishedAt: version.createdAt
       }
     })
@@ -528,6 +531,73 @@ router.post('/:id/move', async (req: AuthRequest, res) => {
     res.status(400).json({
       success: false,
       error: { code: 'MOVE_FAILED', message }
+    })
+  }
+})
+
+// 重命名函数
+router.post('/:id/rename', async (req: AuthRequest, res) => {
+  const { name } = req.body
+
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    res.status(400).json({
+      success: false,
+      error: { code: 'INVALID_INPUT', message: '函数名不能为空' }
+    })
+    return
+  }
+
+  try {
+    // 获取重命名前的函数信息
+    const oldFunc = await functionService.findById(req.params.id, req.user!.userId)
+    if (!oldFunc) {
+      res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: '函数不存在' }
+      })
+      return
+    }
+
+    const result = await functionService.rename(
+      req.params.id,
+      req.user!.userId,
+      name.trim()
+    )
+
+    if (!result.success) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'RENAME_FAILED', message: result.error || '重命名失败' }
+      })
+      return
+    }
+
+    // 记录审计日志
+    await logUserAction({
+      functionId: req.params.id,
+      functionName: name.trim(),
+      userId: req.user!.userId,
+      username: req.user!.username,
+      action: 'rename',
+      changes: {
+        description: `从 "${oldFunc.name}" 重命名为 "${name.trim()}"`,
+      },
+      metadata: {
+        oldName: oldFunc.name,
+        newName: name.trim(),
+        newPath: result.newPath,
+      },
+    })
+
+    res.json({
+      success: true,
+      data: { newName: name.trim(), newPath: result.newPath, newUrl: `/${result.newPath}` }
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : '重命名失败'
+    res.status(400).json({
+      success: false,
+      error: { code: 'RENAME_FAILED', message }
     })
   }
 })

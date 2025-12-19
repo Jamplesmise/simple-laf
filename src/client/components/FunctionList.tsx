@@ -199,8 +199,17 @@ export default function FunctionList() {
 
   const submitRename = async () => {
     if (!renamingFunc || !newFunctionName.trim()) return
-    // TODO: 实现重命名 API
-    message.info('重命名功能将在后续实现')
+    try {
+      const res = await functionApi.rename(renamingFunc._id, newFunctionName.trim())
+      if (res.data.success) {
+        message.success('重命名成功')
+        loadFunctions()
+      } else {
+        message.error('重命名失败')
+      }
+    } catch {
+      message.error('重命名失败')
+    }
     setRenameModalOpen(false)
     setRenamingFunc(null)
     setNewFunctionName('')

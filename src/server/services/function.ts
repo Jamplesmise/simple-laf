@@ -4,9 +4,11 @@ import { getDB } from '../db.js'
 export interface CloudFunction {
   _id: ObjectId
   name: string
+  path: string  // 完整路径，如 "api/user/login"
   code: string
   compiled: string
   userId: ObjectId
+  folderId?: ObjectId
   published: boolean
   publishedAt?: Date
   createdAt: Date
@@ -33,16 +35,33 @@ export async function list(userId: string): Promise<CloudFunction[]> {
 export async function create(
   userId: string,
   name: string,
-  code: string
+  code: string,
+  folderId?: string
 ): Promise<CloudFunction> {
   const db = getDB()
   const now = new Date()
 
+  // 计算完整路径
+  let path = name
+  let folderOid: ObjectId | undefined
+  if (folderId) {
+    folderOid = new ObjectId(folderId)
+    const folder = await db.collection('folders').findOne({
+      _id: folderOid,
+      userId: new ObjectId(userId)
+    })
+    if (folder) {
+      path = `${folder.path}/${name}`
+    }
+  }
+
   const doc = {
     name,
+    path,
     code,
     compiled: '',
     userId: new ObjectId(userId),
+    folderId: folderOid,
     published: true,
     createdAt: now,
     updatedAt: now
@@ -53,7 +72,7 @@ export async function create(
   return {
     _id: result.insertedId,
     ...doc
-  }
+  } as CloudFunction
 }
 
 export async function findById(
@@ -87,4 +106,65 @@ export async function remove(id: string, userId: string): Promise<boolean> {
     userId: new ObjectId(userId)
   })
   return result.deletedCount > 0
+}
+
+export async function rename(
+  id: string,
+  userId: string,
+  newName: string
+): Promise<{ success: boolean; newPath?: string; error?: string }> {
+  const db = getDB()
+  const userOid = new ObjectId(userId)
+  const funcOid = new ObjectId(id)
+
+  // 获取当前函数
+  const func = await db.collection<CloudFunction>('functions').findOne({
+    _id: funcOid,
+    userId: userOid
+  })
+
+  if (!func) {
+    return { success: false, error: '函数不存在' }
+  }
+
+  // 计算新路径
+  let newPath = newName
+  if (func.folderId) {
+    const folder = await db.collection('folders').findOne({
+      _id: func.folderId,
+      userId: userOid
+    })
+    if (folder) {
+      newPath = `${folder.path}/${newName}`
+    }
+  }
+
+  // 检查新路径是否已存在
+  const existing = await db.collection<CloudFunction>('functions').findOne({
+    path: newPath,
+    userId: userOid,
+    _id: { $ne: funcOid }
+  })
+
+  if (existing) {
+    return { success: false, error: '已存在同名函数' }
+  }
+
+  // 更新函数名和路径
+  const result = await db.collection('functions').updateOne(
+    { _id: funcOid, userId: userOid },
+    {
+      $set: {
+        name: newName,
+        path: newPath,
+        updatedAt: new Date()
+      }
+    }
+  )
+
+  if (result.matchedCount === 0) {
+    return { success: false, error: '更新失败' }
+  }
+
+  return { success: true, newPath }
 }

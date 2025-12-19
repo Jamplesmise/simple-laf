@@ -3,6 +3,7 @@ import { getDB } from '../../db.js'
 import type { AIConfig, AIHistory, ChatMessage, ChatOptions, AIAction } from './types.js'
 import { encryptApiKey, decryptApiKey, maskApiKey } from './crypto.js'
 import { createProvider, getDefaultModels, AIProviderError } from './providers/index.js'
+import logger from '../../utils/logger.js'
 
 export { encryptApiKey, decryptApiKey, maskApiKey }
 export { AIProviderError }
@@ -158,12 +159,10 @@ export async function* chatStream(
   options?: ChatOptions,
   modelId?: ObjectId
 ): AsyncGenerator<string, void, unknown> {
-  console.log('[DEBUG chatStream] 开始, userId:', userId.toString(), 'modelId:', modelId?.toString())
   const db = getDB()
 
   // 如果指定了 modelId，使用新的 provider/model 系统
   if (modelId) {
-    console.log('[DEBUG chatStream] 使用新的 provider/model 系统')
     const { getModel, getProvider } = await import('./provider.js')
     const { OpenAIProvider } = await import('./providers/openai.js')
     const { AnthropicProvider } = await import('./providers/anthropic.js')
@@ -171,13 +170,11 @@ export async function* chatStream(
     const { CustomProvider } = await import('./providers/custom.js')
 
     const model = await getModel(db, userId, modelId)
-    console.log('[DEBUG chatStream] 获取到 model:', model ? { name: model.name, providerId: model.providerId.toString() } : null)
     if (!model) {
       throw new AIProviderError('模型不存在', 'MODEL_NOT_FOUND')
     }
 
     const providerData = await getProvider(db, userId, model.providerId)
-    console.log('[DEBUG chatStream] 获取到 provider:', providerData ? { name: providerData.name, type: providerData.type, baseUrl: providerData.baseUrl, hasApiKey: !!providerData.apiKey } : null)
     if (!providerData) {
       throw new AIProviderError('供应商不存在', 'PROVIDER_NOT_FOUND')
     }
@@ -185,7 +182,6 @@ export async function* chatStream(
     let providerInstance
     // API Key 在数据库中是加密存储的，需要解密
     const apiKey = providerData.apiKey ? decryptApiKey(providerData.apiKey) : ''
-    console.log('[DEBUG chatStream] 解密后 apiKey 长度:', apiKey.length, '前4字符:', apiKey.slice(0, 4))
 
     switch (providerData.type) {
       case 'openai':
@@ -204,7 +200,6 @@ export async function* chatStream(
         throw new AIProviderError(`不支持的供应商类型: ${providerData.type}`, 'INVALID_PROVIDER')
     }
 
-    console.log('[DEBUG chatStream] 创建 provider 实例:', providerData.type, '准备调用 chatStream')
     try {
       for await (const chunk of providerInstance.chatStream(messages, {
         model: model.name,
@@ -212,12 +207,10 @@ export async function* chatStream(
         maxTokens: model.maxTokens,
         ...options
       })) {
-        console.log('[DEBUG chatStream] 收到 chunk, 长度:', chunk.length)
         yield chunk
       }
-      console.log('[DEBUG chatStream] 流式响应完成')
     } catch (err) {
-      console.error('[DEBUG chatStream] 流式响应出错:', err)
+      logger.error('[chatStream] 流式响应出错:', err)
       throw err
     }
     return

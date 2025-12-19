@@ -7,30 +7,38 @@ import { executeFunction } from '../engine/executor.js'
 import { createCloudWithEnv } from '../cloud/index.js'
 import { authOrDevelopMiddleware, type AuthRequest } from '../middleware/auth.js'
 import * as executionLogService from '../services/executionLog.js'
+import { invokeLimiter } from '../middleware/rateLimit.js'
 
 const router: IRouter = Router()
 
 /**
- * POST/GET /invoke/:name - 调用云函数
+ * POST/GET /:path(*) - 调用云函数
+ * 支持多级路径，如 /api/user/login
  */
-router.all('/:name', authOrDevelopMiddleware, async (req: AuthRequest, res: Response) => {
-  const { name } = req.params
+router.all('/*', invokeLimiter, authOrDevelopMiddleware, async (req: AuthRequest, res: Response) => {
+  // 获取完整路径（去掉开头的斜杠）
+  const path = req.params[0] || req.path.slice(1)
   const db = getDB()
 
   try {
-    // 构建查询条件
-    const query: Record<string, unknown> = { name }
+    // 构建查询条件 - 按 path 查询，兼容旧数据按 name 查询
+    const baseQuery: Record<string, unknown> = {}
     if (req.user?.userId) {
-      query.userId = new ObjectId(req.user.userId)
+      baseQuery.userId = new ObjectId(req.user.userId)
     }
 
-    // 查找函数
-    const func = await db.collection('functions').findOne(query)
+    // 先按 path 查询
+    let func = await db.collection('functions').findOne({ ...baseQuery, path })
+
+    // 如果找不到，尝试按 name 查询（兼容旧数据）
+    if (!func) {
+      func = await db.collection('functions').findOne({ ...baseQuery, name: path })
+    }
 
     if (!func) {
       res.status(404).json({
         success: false,
-        error: { code: 'FUNCTION_NOT_FOUND', message: `函数 "${name}" 不存在` },
+        error: { code: 'FUNCTION_NOT_FOUND', message: `函数 "${path}" 不存在` },
       })
       return
     }
@@ -60,9 +68,10 @@ router.all('/:name', authOrDevelopMiddleware, async (req: AuthRequest, res: Resp
       userId,
     }
 
-    // 执行函数
+    // 执行函数 - 使用 path 作为函数标识
+    const funcPath = (func.path as string) || (func.name as string)
     const result = await executeFunction(
-      name,
+      funcPath,
       func.compiled as string,
       (func.hash as string) || '',
       ctx
@@ -82,7 +91,7 @@ router.all('/:name', authOrDevelopMiddleware, async (req: AuthRequest, res: Resp
     executionLogService.create({
       userId,
       functionId: func._id.toString(),
-      functionName: name,
+      functionName: funcPath,
       trigger: 'manual',
       request: {
         method: req.method,

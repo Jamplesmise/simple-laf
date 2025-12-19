@@ -7,6 +7,7 @@ import { executeFunction } from '../../engine/executor.js'
 import { createCloud } from '../../cloud/index.js'
 import * as envService from '../env.js'
 import crypto from 'crypto'
+import logger from '../../utils/logger.js'
 
 /**
  * 构建测试生成 Prompt
@@ -108,39 +109,25 @@ ${failedTestsStr}
  * 解析测试用例 JSON
  */
 export function parseTestCases(aiResponse: string): DebugTestCase[] {
-  console.log('[DEBUG parseTestCases] 输入长度:', aiResponse.length)
-  console.log('[DEBUG parseTestCases] 输入内容前500字符:', aiResponse.slice(0, 500))
-
   try {
     // 提取 JSON 块
     const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/)
-    console.log('[DEBUG parseTestCases] JSON 块匹配结果:', jsonMatch ? '找到' : '未找到')
-
     const jsonStr = jsonMatch ? jsonMatch[1] : aiResponse
-    console.log('[DEBUG parseTestCases] 要解析的 JSON 字符串前300字符:', jsonStr.slice(0, 300))
-
     const parsed = JSON.parse(jsonStr)
-    console.log('[DEBUG parseTestCases] JSON 解析成功, keys:', Object.keys(parsed))
-
     const testCases = parsed.testCases || parsed
-    console.log('[DEBUG parseTestCases] testCases 是数组:', Array.isArray(testCases), '长度:', Array.isArray(testCases) ? testCases.length : 'N/A')
 
     if (!Array.isArray(testCases)) {
-      console.log('[DEBUG parseTestCases] testCases 不是数组，返回空')
       return []
     }
 
-    const result = testCases.map((tc: Record<string, unknown>, index: number) => ({
+    return testCases.map((tc: Record<string, unknown>, index: number) => ({
       id: (tc.id as string) || `test-${index + 1}`,
       name: (tc.name as string) || `测试 ${index + 1}`,
       input: (tc.input as DebugTestCase['input']) || {},
       expectedBehavior: (tc.expectedBehavior as string) || ''
     }))
-
-    console.log('[DEBUG parseTestCases] 解析成功，返回', result.length, '个测试用例')
-    return result
   } catch (err) {
-    console.log('[DEBUG parseTestCases] 解析异常:', err instanceof Error ? err.message : String(err))
+    logger.debug('[parseTestCases] 解析失败:', err instanceof Error ? err.message : String(err))
     return []
   }
 }
@@ -271,13 +258,7 @@ export async function* debugStream(
   const testPrompt = buildTestGenerationPrompt(code, functionName)
   let testCasesResponse = ''
 
-  console.log('[DEBUG debugStream] 开始生成测试用例')
-  console.log('[DEBUG debugStream] effectiveModelId:', effectiveModelId?.toString())
-  console.log('[DEBUG debugStream] functionName:', functionName)
-  console.log('[DEBUG debugStream] code 长度:', code.length)
-
   try {
-    let chunkCount = 0
     for await (const chunk of chatStream(
       userId,
       [
@@ -287,18 +268,11 @@ export async function* debugStream(
       { temperature: 0.3 },
       effectiveModelId
     )) {
-      chunkCount++
       testCasesResponse += chunk
-      if (chunkCount <= 3) {
-        console.log('[DEBUG debugStream] chunk', chunkCount, ':', chunk.slice(0, 100))
-      }
       yield { status: 'generating_tests', content: chunk }
     }
-    console.log('[DEBUG debugStream] 共收到', chunkCount, '个 chunk')
-    console.log('[DEBUG debugStream] 完整响应长度:', testCasesResponse.length)
-    console.log('[DEBUG debugStream] 完整响应:', testCasesResponse)
   } catch (err) {
-    console.log('[DEBUG debugStream] chatStream 异常:', err)
+    logger.error('[debugStream] 生成测试用例失败:', err)
     yield { status: 'error', error: `生成测试用例失败: ${err instanceof Error ? err.message : String(err)}` }
     return
   }
@@ -307,8 +281,7 @@ export async function* debugStream(
   const testCases = parseTestCases(testCasesResponse)
 
   if (testCases.length === 0) {
-    console.log('[DEBUG debugStream] 解析失败，testCasesResponse 完整内容:')
-    console.log(testCasesResponse)
+    logger.debug('[debugStream] 无法解析测试用例响应')
     yield { status: 'error', error: '无法解析测试用例' }
     return
   }

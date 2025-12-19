@@ -3,6 +3,7 @@ import { promisify } from 'util'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { createRequire } from 'module'
+import logger from '../utils/logger.js'
 
 const execAsync = promisify(exec)
 const require = createRequire(import.meta.url)
@@ -34,7 +35,7 @@ export async function installPackage(name: string, version?: string): Promise<vo
   const packageSpec = version && version !== 'latest' ? `${name}@${version}` : name
   const cmd = `pnpm add ${packageSpec} --registry=${REGISTRY}`
 
-  console.log(`[NPM] Running: ${cmd}`)
+  logger.debug(`[NPM] Running: ${cmd}`)
 
   try {
     const { stdout, stderr } = await execAsync(cmd, {
@@ -43,11 +44,11 @@ export async function installPackage(name: string, version?: string): Promise<vo
       maxBuffer: 1024 * 1024 * 10, // 10MB
       env: { ...process.env, NODE_ENV: 'development' }, // 避免生产模式下的依赖冲突
     })
-    console.log(`[NPM] Install stdout:`, stdout)
-    if (stderr) console.log(`[NPM] Install stderr:`, stderr)
+    logger.debug(`[NPM] Install stdout:`, stdout)
+    if (stderr) logger.debug(`[NPM] Install stderr:`, stderr)
   } catch (error: unknown) {
     const err = error as { stderr?: string; stdout?: string; message?: string }
-    console.error(`[NPM] Install failed:`, err.stderr || err.stdout || err.message)
+    logger.error(`[NPM] Install failed:`, err.stderr || err.stdout || err.message)
     throw new Error(`安装失败: ${err.stderr || err.message}`)
   }
 }
@@ -151,11 +152,9 @@ export async function searchPackages(query: string): Promise<PackageInfo[]> {
  */
 export function isPackageInstalled(name: string): boolean {
   try {
-    const resolved = require.resolve(name)
-    console.log(`[NPM] Package ${name} found at: ${resolved}`)
+    require.resolve(name)
     return true
-  } catch (err) {
-    console.log(`[NPM] Package ${name} not found:`, (err as Error).message)
+  } catch {
     return false
   }
 }
@@ -167,10 +166,8 @@ export function getInstalledVersion(name: string): string | null {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pkg = require(`${name}/package.json`)
-    console.log(`[NPM] Package ${name} version: ${pkg.version}`)
     return pkg.version
-  } catch (err) {
-    console.log(`[NPM] Cannot get version for ${name}:`, (err as Error).message)
+  } catch {
     return null
   }
 }

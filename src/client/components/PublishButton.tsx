@@ -11,7 +11,7 @@ export default function PublishButton() {
 
   if (!current) return null
 
-  const publicUrl = `${window.location.origin}/${current.name}`
+  const publicUrl = `${window.location.origin}/${current.path || current.name}`
 
   const handlePublished = (version: number) => {
     message.success(`发版成功，版本 v${version}`)
