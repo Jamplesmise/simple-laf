@@ -34,11 +34,18 @@ RUN pnpm config set registry https://registry.npmmirror.com
 # Copy package.json
 COPY package.json ./
 
-# Copy node_modules from builder (includes all dependencies)
-COPY --from=builder /app/node_modules ./node_modules
+# Copy node_modules to backup (for volume initialization)
+COPY --from=builder /app/node_modules ./node_modules_backup
 
 # Copy build artifacts
 COPY --from=builder /app/dist ./dist
+
+# Copy and setup entrypoint
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+# Create empty node_modules dir for volume mount
+RUN mkdir -p /app/node_modules
 
 # Environment
 ENV NODE_ENV=production
@@ -46,4 +53,5 @@ ENV PORT=3000
 
 EXPOSE 3000
 
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["node", "dist/server/index.js"]
