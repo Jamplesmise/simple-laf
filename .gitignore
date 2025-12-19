@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+packages/server/dist/
+packages/web/dist/
+packages/server/public/
+
+# Environment files (NEVER commit these!)
+.env
+.env.local
+.env.*.local
+packages/server/.env
+packages/web/.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Test outputs
+test-results/
+playwright-report/
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Artifact files (from failed commands)
+cd
+pnpm
+tsc
+simple-ide@1.0.0
+
+# TypeScript
+*.tsbuildinfo
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock

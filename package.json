@@ -1,0 +1,23 @@
+{
+  "name": "simple-ide",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:server": "pnpm --filter @simple-ide/server dev",
+    "dev:web": "pnpm --filter @simple-ide/web dev",
+    "build": "pnpm build:web && pnpm build:server && pnpm build:copy",
+    "build:web": "pnpm --filter @simple-ide/web build",
+    "build:server": "pnpm --filter @simple-ide/server build",
+    "build:copy": "rm -rf packages/server/public && cp -r packages/web/dist packages/server/public",
+    "start": "NODE_ENV=production pnpm --filter @simple-ide/server start",
+    "test": "pnpm test:server && pnpm test:web",
+    "test:server": "pnpm --filter @simple-ide/server test",
+    "test:web": "pnpm --filter @simple-ide/web test",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:all": "pnpm test && pnpm test:e2e"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0"
+  }
+}

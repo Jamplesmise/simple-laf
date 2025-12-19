@@ -1,0 +1,196 @@
+/**
+ * Button 组件公共样式
+ *
+ * 用于自定义按钮变体，补充 Ant Design Button
+ */
+
+/* ============================================
+   图标按钮
+   ============================================ */
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.iconButton:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+}
+
+.iconButton:active {
+  transform: scale(0.95);
+}
+
+.iconButtonSm {
+  width: 24px;
+  height: 24px;
+}
+
+.iconButtonLg {
+  width: 32px;
+  height: 32px;
+}
+
+/* ============================================
+   Ghost 按钮 (无背景)
+   ============================================ */
+
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.ghost:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text);
+}
+
+/* ============================================
+   主色按钮
+   ============================================ */
+
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.primary:hover {
+  background: var(--color-accent-hover);
+}
+
+.primary:active {
+  transform: scale(0.98);
+}
+
+.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   次级按钮
+   ============================================ */
+
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-card);
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.secondary:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-border);
+}
+
+/* ============================================
+   危险按钮
+   ============================================ */
+
+.danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-error);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.danger:hover {
+  opacity: 0.9;
+}
+
+/* ============================================
+   链接按钮
+   ============================================ */
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-accent);
+  font-size: 14px;
+  cursor: pointer;
+  transition: color var(--transition-normal);
+}
+
+.link:hover {
+  color: var(--color-accent-hover);
+}
+
+/* ============================================
+   按钮组
+   ============================================ */
+
+.group {
+  display: inline-flex;
+  gap: 0;
+}
+
+.group > button:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.group > button:last-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.group > button:not(:first-child):not(:last-child) {
+  border-radius: 0;
+}
+
+.group > button:not(:last-child) {
+  border-right: none;
+}

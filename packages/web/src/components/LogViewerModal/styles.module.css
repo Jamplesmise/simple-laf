@@ -1,0 +1,269 @@
+/**
+ * LogViewerModal 样式
+ */
+
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 筛选栏 */
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+/* 主体内容 */
+.mainContent {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* 左侧选择器面板 */
+.selectorPanel {
+  width: 320px;
+  display: flex;
+  border-right: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.selectorColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.selectorColumn:first-child {
+  border-right: 1px solid var(--color-border);
+}
+
+.selectorHeader {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.selectorList {
+  flex: 1;
+  overflow: auto;
+  padding: 4px 0;
+}
+
+/* 文件夹项 */
+.folderItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 13px;
+}
+
+.folderItem:hover {
+  background: var(--color-bg-hover);
+}
+
+.folderItemActive {
+  background: var(--color-accent-surface);
+}
+
+.folderIcon {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.folderName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folderExpand {
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+/* 函数项 */
+.functionItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 13px;
+}
+
+.functionItem:hover {
+  background: var(--color-bg-hover);
+}
+
+.functionItemActive {
+  background: var(--color-accent-surface);
+}
+
+.functionIcon {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.functionName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkIcon {
+  color: var(--color-accent);
+  font-size: 14px;
+}
+
+.emptyFolder {
+  padding: 20px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+/* 右侧日志面板 */
+.logPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.logList {
+  flex: 1;
+  overflow: auto;
+  padding: 12px;
+}
+
+/* 日志项 */
+.logItem {
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.logHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--color-bg-muted);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.logIndex {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  min-width: 40px;
+}
+
+.logTime {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.logPath {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-accent);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logDuration {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+}
+
+.logContent {
+  padding: 12px;
+  max-height: 150px;
+  overflow: auto;
+}
+
+.logContent pre {
+  margin: 0;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.logText {
+  color: var(--color-text);
+}
+
+.logError {
+  color: var(--color-error);
+}
+
+.logResult {
+  padding: 8px 12px;
+  background: var(--color-bg-muted);
+  border-top: 1px solid var(--color-border);
+  font-size: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.logResultLabel {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.logResult code {
+  font-family: var(--font-mono);
+  color: var(--color-text);
+  word-break: break-all;
+}
+
+/* 分页 */
+.pagination {
+  padding: 12px 16px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: center;
+}
+
+/* 加载状态 */
+.loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}

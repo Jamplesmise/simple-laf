@@ -1,0 +1,1099 @@
+/**
+ * AIConversationDialog 样式
+ *
+ * Emerald 主题设计系统
+ * 类似桌面应用窗口的现代 UI
+ */
+
+/* ============================================
+   CSS 变量 - Emerald 主题
+   ============================================ */
+
+:root {
+  --emerald-600: #059669;
+  --emerald-700: #047857;
+  --emerald-50: #ecfdf5;
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-500: #64748b;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+  --amber-50: #fffbeb;
+  --amber-100: #fef3c7;
+  --amber-700: #b45309;
+}
+
+/* ============================================
+   容器布局
+   ============================================ */
+
+.container {
+  display: flex;
+  height: 100%;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ============================================
+   左侧边栏 (历史记录)
+   ============================================ */
+
+.sidebar {
+  width: 288px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(248, 250, 252, 0.5);
+  border-right: 1px solid #f1f5f9;
+}
+
+.sidebarHeader {
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.newChatButton {
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  background: var(--emerald-600);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.15s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.newChatButton:hover {
+  background: var(--emerald-700);
+}
+
+.filterBar {
+  padding: 8px 12px;
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.filterTag {
+  cursor: pointer;
+  border-radius: 16px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  background: transparent;
+  color: var(--slate-500);
+  border: none;
+  transition: all 0.15s;
+}
+
+.filterTag:hover {
+  background: #f1f5f9;
+  color: var(--slate-700);
+}
+
+.filterTagActive {
+  background: var(--emerald-50);
+  color: var(--emerald-600);
+}
+
+.conversationList {
+  flex: 1;
+  overflow: auto;
+  padding: 8px;
+}
+
+.conversationItem {
+  padding: 12px 14px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: background 0.15s;
+}
+
+.conversationItem:hover {
+  background: rgba(241, 245, 249, 0.8);
+}
+
+.conversationItemActive {
+  background: var(--emerald-50);
+}
+
+.conversationIcon {
+  flex-shrink: 0;
+  font-size: 16px;
+  color: var(--slate-500);
+}
+
+.conversationContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.conversationTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--slate-800);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversationTime {
+  font-size: 12px;
+  color: var(--slate-500);
+  margin-top: 2px;
+}
+
+/* ============================================
+   右侧主区域
+   ============================================ */
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  position: relative;
+}
+
+/* ============================================
+   头部工具栏
+   ============================================ */
+
+.headerToolbar {
+  height: 64px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.headerDivider {
+  width: 1px;
+  height: 24px;
+  background: #e2e8f0;
+  margin: 0 8px;
+}
+
+.headerControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 下拉选择器按钮 */
+.selectorButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: none;
+  color: var(--slate-700);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.selectorButton:hover {
+  background: #f1f5f9;
+}
+
+.selectorIcon {
+  font-size: 14px;
+  color: var(--slate-500);
+}
+
+.selectorChevron {
+  font-size: 12px;
+  color: var(--slate-400);
+}
+
+/* 关闭按钮 */
+.closeButton {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--slate-500);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.closeButton:hover {
+  background: #f1f5f9;
+  color: var(--slate-700);
+}
+
+/* ============================================
+   Capsule/Pill 选择器 (Zone B)
+   ============================================ */
+
+.selectorPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: var(--slate-700);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.selectorPill:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.selectorPill:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.selectorPillActive {
+  background: var(--emerald-50);
+  border-color: var(--emerald-600);
+  color: var(--emerald-600);
+}
+
+.selectorPillActive:hover {
+  background: var(--emerald-50);
+  border-color: var(--emerald-700);
+}
+
+.selectorPillIcon {
+  font-size: 14px;
+  color: var(--slate-500);
+}
+
+.selectorPillActive .selectorPillIcon {
+  color: var(--emerald-600);
+}
+
+.selectorPillChevron {
+  font-size: 10px;
+  color: var(--slate-400);
+  margin-left: 2px;
+}
+
+/* 下拉菜单项 */
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 140px;
+}
+
+.dropdownCheck {
+  color: var(--emerald-600);
+  font-size: 12px;
+}
+
+/* 对话列表更多按钮 */
+.conversationMoreBtn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--slate-400);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.conversationItem:hover .conversationMoreBtn {
+  opacity: 1;
+}
+
+.conversationMoreBtn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--slate-600);
+}
+
+/* 旧版 mainHeader 保持兼容 */
+.mainHeader {
+  padding: 12px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ============================================
+   消息区域
+   ============================================ */
+
+.messageArea {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.messageItem {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.messageAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.userAvatar {
+  background: var(--emerald-600);
+  color: white;
+}
+
+.assistantAvatar {
+  background: #f1f5f9;
+  color: var(--slate-500);
+}
+
+.messageContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.messageText {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--slate-800);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ============================================
+   代码块
+   ============================================ */
+
+.codeBlock {
+  margin: 16px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.codeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.codeLanguage {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--slate-500);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.copyButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--slate-500);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.copyButton:hover {
+  background: #e2e8f0;
+  color: var(--slate-700);
+}
+
+.codeContent {
+  padding: 14px 18px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  background: #fafafa;
+}
+
+/* ============================================
+   思考过程 (折叠块)
+   ============================================ */
+
+.thinkingBlock {
+  margin: 16px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #fef3c7;
+}
+
+.thinkingHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 251, 235, 0.5);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+  border-bottom: 1px solid #fef3c7;
+}
+
+.thinkingHeader:hover {
+  background: rgba(255, 251, 235, 0.8);
+}
+
+.thinkingIcon {
+  color: var(--amber-700);
+  font-size: 14px;
+}
+
+.thinkingLabel {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  color: var(--amber-700);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.thinkingContent {
+  padding: 14px 16px;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  line-height: 1.7;
+  color: var(--slate-500);
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* ============================================
+   Artifact 卡片 (类似 Claude Artifacts)
+   ============================================ */
+
+.artifactCard {
+  margin: 16px 0;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.artifactClickable {
+  cursor: pointer;
+}
+
+.artifactClickable:hover {
+  border-color: var(--artifact-color, var(--emerald-600));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.artifactHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.artifactIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.artifactInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.artifactTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.artifactLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.artifactName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--slate-800);
+}
+
+.artifactDesc {
+  font-size: 13px;
+  color: var(--slate-500);
+  margin-top: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.artifactActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.artifactAction {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--slate-500);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.artifactAction:hover {
+  background: #e2e8f0;
+  color: var(--slate-700);
+}
+
+.artifactExpand {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--slate-400);
+  font-size: 12px;
+}
+
+.artifactPreview {
+  position: relative;
+  padding: 14px 16px;
+  max-height: 140px;
+  overflow: hidden;
+}
+
+.artifactPreview pre {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--slate-500);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.artifactPreviewFade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: linear-gradient(to bottom, transparent, #f8fafc);
+  pointer-events: none;
+}
+
+.artifactCode {
+  padding: 16px 18px;
+  max-height: 450px;
+  overflow: auto;
+}
+
+.artifactCode pre {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--slate-800);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* 操作类型颜色 */
+.operationIconCreate {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22C55E;
+}
+
+.operationIconUpdate {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+}
+
+.operationIconDelete {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+.operationIconDebug {
+  background: rgba(236, 72, 153, 0.1);
+  color: #EC4899;
+}
+
+.operationIconExplain {
+  background: rgba(6, 182, 212, 0.1);
+  color: #06B6D4;
+}
+
+.operationIconRefactor {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8B5CF6;
+}
+
+.operationIconMerge {
+  background: rgba(249, 115, 22, 0.1);
+  color: #F97316;
+}
+
+.operationIconDefault {
+  background: rgba(113, 113, 122, 0.1);
+  color: #71717A;
+}
+
+/* 旧版兼容 */
+.operationCard {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.operationIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.operationContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.operationTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--slate-800);
+}
+
+.operationDesc {
+  font-size: 13px;
+  color: var(--slate-500);
+  margin-top: 2px;
+}
+
+/* ============================================
+   输入区域
+   ============================================ */
+
+.inputArea {
+  padding: 20px 24px;
+  border-top: 1px solid #f1f5f9;
+  background: #fff;
+}
+
+.inputWrapper {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.inputWrapper:focus-within {
+  border-color: var(--emerald-600);
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+.inputTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.inputTagsEmpty {
+  border-bottom: none;
+}
+
+.inputMain {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 14px;
+}
+
+.textarea {
+  flex: 1;
+  min-height: 28px;
+  max-height: 200px;
+  resize: none;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.5;
+  font-family: inherit;
+  color: var(--slate-800);
+  background: transparent;
+}
+
+.textarea::placeholder {
+  color: var(--slate-400);
+}
+
+.sendButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: none;
+  background: var(--emerald-600);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.15s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sendButton:hover {
+  background: var(--emerald-700);
+}
+
+.sendButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   函数选择器
+   ============================================ */
+
+.functionPicker {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  margin-bottom: 10px;
+}
+
+.pickerColumns {
+  display: flex;
+  height: 300px;
+}
+
+.pickerColumn {
+  flex: 1;
+  overflow: auto;
+  border-right: 1px solid #f1f5f9;
+}
+
+.pickerColumn:last-child {
+  border-right: none;
+}
+
+.pickerItem {
+  padding: 10px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.15s;
+  font-size: 13px;
+  color: var(--slate-700);
+}
+
+.pickerItem:hover {
+  background: #f8fafc;
+}
+
+.pickerItemActive {
+  background: var(--emerald-50);
+  color: var(--emerald-600);
+}
+
+.pickerEmpty {
+  padding: 12px;
+  text-align: center;
+  color: var(--slate-500);
+  font-size: 13px;
+}
+
+/* ============================================
+   斜杠菜单
+   ============================================ */
+
+.slashMenu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  width: 300px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.slashMenuItem {
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: background 0.15s;
+}
+
+.slashMenuItem:hover {
+  background: #f8fafc;
+}
+
+.slashMenuCommand {
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  color: var(--slate-800);
+}
+
+.slashMenuDesc {
+  font-size: 12px;
+  color: var(--slate-500);
+}
+
+/* ============================================
+   空状态
+   ============================================ */
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--slate-400);
+}
+
+.emptyIcon {
+  font-size: 56px;
+  margin-bottom: 20px;
+  opacity: 0.4;
+}
+
+.emptyText {
+  font-size: 15px;
+  color: var(--slate-500);
+}
+
+/* ============================================
+   状态徽章
+   ============================================ */
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 24px;
+  border: 1px solid #e2e8f0;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  animation: slideIn 0.3s ease;
+  background: #f8fafc;
+  color: var(--slate-700);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   流式内容指示器
+   ============================================ */
+
+.streamingIndicator {
+  display: inline-flex;
+  gap: 5px;
+  margin-left: 10px;
+}
+
+.streamingDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--emerald-600);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.streamingDot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.streamingDot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================
+   暗色模式适配
+   ============================================ */
+
+:global(.dark) .container {
+  background: #1e293b;
+}
+
+:global(.dark) .sidebar {
+  background: rgba(30, 41, 59, 0.5);
+  border-color: #334155;
+}
+
+:global(.dark) .main {
+  background: #1e293b;
+}
+
+:global(.dark) .headerToolbar {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(.dark) .messageText {
+  color: #e2e8f0;
+}
+
+:global(.dark) .inputWrapper {
+  border-color: #334155;
+  background: #0f172a;
+}
+
+:global(.dark) .textarea {
+  color: #e2e8f0;
+}
+
+:global(.dark) .codeContent {
+  background: #0f172a;
+}
+
+:global(.dark) .artifactHeader {
+  background: #0f172a;
+}
+
+:global(.dark) .thinkingContent {
+  background: #0f172a;
+}
+
+:global(.dark) .selectorPill {
+  background: #334155;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark) .selectorPill:hover {
+  background: #3f4f63;
+  border-color: #64748b;
+}
+
+:global(.dark) .selectorPillIcon {
+  color: #94a3b8;
+}
+
+:global(.dark) .conversationMoreBtn {
+  color: #64748b;
+}
+
+:global(.dark) .conversationMoreBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+}
