@@ -14,6 +14,7 @@ RUN pnpm install --frozen-lockfile || pnpm install
 
 # Copy source files
 COPY src/ ./src/
+COPY public/ ./public/
 COPY index.html vite.config.ts tsconfig.json tsconfig.server.json ./
 
 # Build client and server
