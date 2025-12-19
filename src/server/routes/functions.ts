@@ -266,11 +266,13 @@ router.post('/:id/publish', async (req: AuthRequest, res) => {
       },
     })
 
+    // 使用 path（如果有）否则用 name
+    const funcPath = (func as unknown as { path?: string }).path || func.name
     res.json({
       success: true,
       data: {
         version: version.version,
-        url: `/${func.name}`,
+        url: `/${funcPath}`,
         publishedAt: version.createdAt
       }
     })

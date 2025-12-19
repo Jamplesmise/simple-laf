@@ -60,7 +60,7 @@ export default function RequestPanel({ onResult }: RequestPanelProps) {
         return
       }
 
-      const invokeResult = await invokeApi.run(current.name, body)
+      const invokeResult = await invokeApi.run(current.path || current.name, body)
       onResult(invokeResult)
     } catch {
       message.error('执行失败')

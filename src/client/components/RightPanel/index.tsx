@@ -100,7 +100,7 @@ export default function RightPanel({ onResult }: RightPanelProps) {
         setRunning(false)
         return
       }
-      const invokeResult = await invokeApi.run(current.name, body)
+      const invokeResult = await invokeApi.run(current.path || current.name, body)
       onResult(invokeResult)
       requestParams.save()
     } catch {
@@ -113,7 +113,7 @@ export default function RightPanel({ onResult }: RightPanelProps) {
   // 复制 API 链接
   const handleCopy = async () => {
     if (!current) return
-    const url = `${window.location.origin}/${current.name}`
+    const url = `${window.location.origin}/${current.path || current.name}`
     try {
       await navigator.clipboard.writeText(url)
       setCopied(true)
@@ -173,7 +173,7 @@ export default function RightPanel({ onResult }: RightPanelProps) {
     loadVersions()
   }
 
-  const publicUrl = current ? `${window.location.origin}/${current.name}` : ''
+  const publicUrl = current ? `${window.location.origin}/${current.path || current.name}` : ''
 
   return (
     <div style={{

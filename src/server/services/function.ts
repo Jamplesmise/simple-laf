@@ -4,9 +4,11 @@ import { getDB } from '../db.js'
 export interface CloudFunction {
   _id: ObjectId
   name: string
+  path: string  // 完整路径，如 "api/user/login"
   code: string
   compiled: string
   userId: ObjectId
+  folderId?: ObjectId
   published: boolean
   publishedAt?: Date
   createdAt: Date
@@ -40,6 +42,7 @@ export async function create(
 
   const doc = {
     name,
+    path: name,  // 初始路径等于函数名，移动到文件夹时会更新
     code,
     compiled: '',
     userId: new ObjectId(userId),
@@ -53,7 +56,7 @@ export async function create(
   return {
     _id: result.insertedId,
     ...doc
-  }
+  } as CloudFunction
 }
 
 export async function findById(

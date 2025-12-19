@@ -78,14 +78,16 @@ export default function Editor() {
       label: 'AI 对话助手',
       onClick: () => {
         const editor = editorRef.current
+        let selectedCode: string | undefined = undefined
         if (editor) {
           const selection = editor.getSelection()
-          const selectedCode = selection ? editor.getModel()?.getValueInRange(selection) : ''
-          openConversationDialog({
-            selectedCode: selectedCode || undefined,
-            functionId: current?._id
-          })
+          selectedCode = selection ? editor.getModel()?.getValueInRange(selection) || undefined : undefined
         }
+        // 即使没有编辑器也可以打开 AI 对话
+        openConversationDialog({
+          selectedCode,
+          functionId: current?._id
+        })
         setContextMenu({ visible: false, x: 0, y: 0 })
       }
     },
@@ -254,9 +256,9 @@ export default function Editor() {
         }}
       >
         请选择或创建一个函数
-        {/* 空状态下的右键菜单 */}
+        {/* 空状态下的右键菜单 - 显示完整菜单 */}
         <Dropdown
-          menu={{ items: menuItems.filter(item => item.key === 'aiChat') }}
+          menu={{ items: menuItems }}
           open={contextMenu.visible}
           trigger={['contextMenu']}
           overlayStyle={{
