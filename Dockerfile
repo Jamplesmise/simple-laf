@@ -30,11 +30,11 @@ RUN apk add --no-cache git && npm install -g pnpm typescript typescript-language
 # Configure pnpm mirror
 RUN pnpm config set registry https://registry.npmmirror.com
 
-# Copy package.json for production dependencies
+# Copy package.json
 COPY package.json ./
 
-# Install production dependencies only
-RUN pnpm install --prod --frozen-lockfile || pnpm install --prod
+# Copy node_modules from builder (includes all dependencies)
+COPY --from=builder /app/node_modules ./node_modules
 
 # Copy build artifacts
 COPY --from=builder /app/dist ./dist
@@ -42,9 +42,6 @@ COPY --from=builder /app/dist ./dist
 # Environment
 ENV NODE_ENV=production
 ENV PORT=3000
-
-# Persist node_modules for dynamic dependencies
-VOLUME ["/app/node_modules"]
 
 EXPOSE 3000
 

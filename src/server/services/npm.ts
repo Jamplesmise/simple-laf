@@ -10,10 +10,10 @@ const require = createRequire(import.meta.url)
 // 阿里云 NPM 镜像
 const REGISTRY = 'https://registry.npmmirror.com'
 
-// 获取 server 包的根目录 (用于安装运行时依赖)
-// 编译后: dist/services/npm.js -> ../.. 到 packages/server
+// 获取项目根目录 (用于安装运行时依赖)
+// 编译后: dist/server/services/npm.js -> ../../.. 到项目根目录
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const SERVER_ROOT = path.resolve(__dirname, '../..')
+const PROJECT_ROOT = path.resolve(__dirname, '../../..')
 
 export interface PackageInfo {
   name: string
@@ -32,14 +32,13 @@ export interface PackageVersions {
  */
 export async function installPackage(name: string, version?: string): Promise<void> {
   const packageSpec = version && version !== 'latest' ? `${name}@${version}` : name
-  // 使用 --filter 在 monorepo 中正确安装到 server 包
-  const cmd = `pnpm add ${packageSpec} --filter @simple-ide/server --registry=${REGISTRY}`
+  const cmd = `pnpm add ${packageSpec} --registry=${REGISTRY}`
 
   console.log(`[NPM] Running: ${cmd}`)
 
   try {
     const { stdout, stderr } = await execAsync(cmd, {
-      cwd: SERVER_ROOT,
+      cwd: PROJECT_ROOT,
       timeout: 180000, // 3分钟超时
       maxBuffer: 1024 * 1024 * 10, // 10MB
       env: { ...process.env, NODE_ENV: 'development' }, // 避免生产模式下的依赖冲突
@@ -58,8 +57,8 @@ export async function installPackage(name: string, version?: string): Promise<vo
  */
 export async function uninstallPackage(name: string): Promise<void> {
   try {
-    await execAsync(`pnpm remove ${name} --filter @simple-ide/server`, {
-      cwd: SERVER_ROOT,
+    await execAsync(`pnpm remove ${name}`, {
+      cwd: PROJECT_ROOT,
       timeout: 60000,
       env: { ...process.env, NODE_ENV: 'development' }, // 避免生产模式下的依赖冲突
     })
