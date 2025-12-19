@@ -61,7 +61,7 @@ Simple Laf 是一个轻量级的 Serverless Web IDE，参考 [laf](https://githu
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/simple-laf.git
+git clone https://github.com/Jamplesmise/simple-laf.git
 cd simple-laf
 
 # 配置环境变量
@@ -78,14 +78,14 @@ docker-compose up -d
 
 ```bash
 # 拉取镜像
-docker pull ghcr.io/yourusername/simple-laf:latest
+docker pull ghcr.io/jamplesmise/simple-laf:latest
 
 # 运行 (需要外部 MongoDB)
 docker run -d -p 3000:3000 \
   -e MONGO_URL="mongodb://host:27017/simple-laf" \
   -e JWT_SECRET="your-secret-key" \
   -v simple-laf-modules:/app/node_modules \
-  ghcr.io/yourusername/simple-laf:latest
+  ghcr.io/jamplesmise/simple-laf:latest
 ```
 
 ## Development
