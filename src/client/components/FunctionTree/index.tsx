@@ -246,10 +246,13 @@ export default function FunctionTree({ onRefresh }: FunctionTreeProps) {
         if (selectedNode?.isFolder) {
           await folderApi.rename(selectedNode.key, inputValue.trim())
         } else if (selectedNode) {
-          message.info('函数重命名功能暂未实现')
-          setModalOpen(false)
-          setConfirmLoading(false)
-          return
+          const res = await functionApi.rename(selectedNode.key, inputValue.trim())
+          if (!res.data.success) {
+            message.error('重命名失败')
+            setModalOpen(false)
+            setConfirmLoading(false)
+            return
+          }
         }
         message.success('已重命名')
       }

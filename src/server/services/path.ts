@@ -100,6 +100,56 @@ export async function isPathAvailable(
   return true
 }
 
+// 迁移所有用户的函数路径 (启动时调用)
+export async function migrateAllFunctionPaths(): Promise<{ migrated: number; fixed: number }> {
+  const db = getDB()
+
+  // 找出所有没有 path 字段的函数
+  const functionsWithoutPath = await db.collection('functions')
+    .find({ path: { $exists: false } })
+    .toArray()
+
+  let migrated = 0
+  for (const func of functionsWithoutPath) {
+    let path = func.name as string
+
+    if (func.folderId) {
+      const folder = await db.collection('folders').findOne({ _id: func.folderId })
+      if (folder) {
+        path = `${folder.path}/${func.name}`
+      }
+    }
+
+    await db.collection('functions').updateOne(
+      { _id: func._id },
+      { $set: { path } }
+    )
+    migrated++
+  }
+
+  // 修复路径不正确的函数 (folderId 存在但 path 不包含文件夹路径)
+  const allFunctions = await db.collection('functions')
+    .find({ folderId: { $exists: true, $ne: null } })
+    .toArray()
+
+  let fixed = 0
+  for (const func of allFunctions) {
+    const folder = await db.collection('folders').findOne({ _id: func.folderId })
+    if (folder) {
+      const expectedPath = `${folder.path}/${func.name}`
+      if (func.path !== expectedPath) {
+        await db.collection('functions').updateOne(
+          { _id: func._id },
+          { $set: { path: expectedPath } }
+        )
+        fixed++
+      }
+    }
+  }
+
+  return { migrated, fixed }
+}
+
 // 验证路径格式
 export function validatePath(path: string): { valid: boolean; error?: string } {
   if (!path) {

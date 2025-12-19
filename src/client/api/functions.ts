@@ -87,4 +87,10 @@ export const functionApi = {
       `/api/functions/${id}/rollback`,
       { version }
     ),
+
+  rename: (id: string, name: string) =>
+    client.post<{ success: boolean; data: { newName: string; newPath: string; newUrl: string } }>(
+      `/api/functions/${id}/rename`,
+      { name }
+    ),
 }

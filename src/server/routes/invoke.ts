@@ -7,6 +7,7 @@ import { executeFunction } from '../engine/executor.js'
 import { createCloudWithEnv } from '../cloud/index.js'
 import { authOrDevelopMiddleware, type AuthRequest } from '../middleware/auth.js'
 import * as executionLogService from '../services/executionLog.js'
+import { invokeLimiter } from '../middleware/rateLimit.js'
 
 const router: IRouter = Router()
 
@@ -14,7 +15,7 @@ const router: IRouter = Router()
  * POST/GET /:path(*) - 调用云函数
  * 支持多级路径，如 /api/user/login
  */
-router.all('/*', authOrDevelopMiddleware, async (req: AuthRequest, res: Response) => {
+router.all('/*', invokeLimiter, authOrDevelopMiddleware, async (req: AuthRequest, res: Response) => {
   // 获取完整路径（去掉开头的斜杠）
   const path = req.params[0] || req.path.slice(1)
   const db = getDB()

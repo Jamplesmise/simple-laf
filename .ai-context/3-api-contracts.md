@@ -64,6 +64,7 @@ POST   /api/functions/:id/unpublish # 取消发布
 GET    /api/functions/:id/versions # 版本列表
 POST   /api/functions/:id/rollback # 回滚
 POST   /api/functions/:id/move     # 移动
+POST   /api/functions/:id/rename   # 重命名 { name }
 ```
 
 ## 文件夹 API
@@ -278,8 +279,26 @@ GET    /api/audit/stats              # 审计统计
 ## 函数调用 API
 
 ```
-ALL    /invoke/:name            # 内部调用 (需认证)
+ALL    /invoke/*                # 内部调用 (需认证，支持多级路径如 /invoke/api/user/login)
 ALL    /*                       # 公开调用 (无需认证，函数需已发布)
+```
+
+## 健康检查 API
+
+```
+GET    /health                  # 健康检查
+```
+
+响应示例：
+```json
+{
+  "status": "ok",              // ok | degraded | error
+  "timestamp": "2024-...",
+  "uptime": 12345.67,          // 秒
+  "checks": {
+    "database": "ok"           // ok | error
+  }
+}
 ```
 
 ## LSP WebSocket
@@ -301,8 +320,10 @@ WebSocket: ws://localhost:3000/_/lsp
 | FORBIDDEN | 403 | 无权限 |
 | NOT_FOUND | 404 | 资源不存在 |
 | DUPLICATE_NAME | 409 | 名称重复 |
+| RATE_LIMIT_EXCEEDED | 429 | 请求过于频繁 |
 | VALIDATION_ERROR | 400 | 参数错误 |
 | COMPILE_ERROR | 400 | 编译失败 |
+| RENAME_FAILED | 400 | 重命名失败 |
 | RUNTIME_ERROR | 500 | 执行错误 |
 | SERVER_ERROR | 500 | 服务器错误 |
 

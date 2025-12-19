@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb'
 import { getDB } from '../db.js'
 import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
 import * as npmService from '../services/npm.js'
+import logger from '../utils/logger.js'
 
 const router: RouterType = Router()
 
@@ -22,8 +23,6 @@ interface Dependency {
  * 获取依赖列表
  */
 router.get('/', authMiddleware, async (req: AuthRequest, res) => {
-  console.log('[DEBUG] GET /api/dependencies')
-  console.log('[DEBUG] User:', req.user)
   try {
     const db = getDB()
     const deps = await db.collection<Dependency>('dependencies')
@@ -31,10 +30,9 @@ router.get('/', authMiddleware, async (req: AuthRequest, res) => {
       .sort({ createdAt: -1 })
       .toArray()
 
-    console.log('[DEBUG] Found deps:', deps.length)
     res.json({ success: true, data: deps })
   } catch (error) {
-    console.error('获取依赖列表失败:', error)
+    logger.error('获取依赖列表失败:', error)
     res.status(500).json({
       success: false,
       error: { code: 'INTERNAL_ERROR', message: '获取依赖列表失败' }
@@ -47,14 +45,9 @@ router.get('/', authMiddleware, async (req: AuthRequest, res) => {
  * 添加依赖
  */
 router.post('/', authMiddleware, async (req: AuthRequest, res) => {
-  console.log('[DEBUG] POST /api/dependencies')
-  console.log('[DEBUG] Content-Type:', req.headers['content-type'])
-  console.log('[DEBUG] Body:', req.body)
-
   const { name, version } = req.body
 
   if (!name || typeof name !== 'string') {
-    console.log('[DEBUG] Invalid name:', name, typeof name)
     return res.status(400).json({
       success: false,
       error: { code: 'INVALID_PARAMS', message: '包名不能为空' }
@@ -75,7 +68,6 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
       // 如果状态是 failed，删除旧记录重新安装
       if (existing.status === 'failed') {
         await db.collection<Dependency>('dependencies').deleteOne({ _id: existing._id })
-        console.log(`[DEBUG] Removed failed dependency ${name}, will retry`)
       } else if (existing.status === 'installing') {
         return res.status(400).json({
           success: false,
@@ -122,7 +114,7 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
             }
           }
         )
-        console.log(`依赖 ${name}@${installedVersion} 安装成功`)
+        logger.info(`依赖 ${name}@${installedVersion} 安装成功`)
       })
       .catch(async (error: Error) => {
         await db.collection<Dependency>('dependencies').updateOne(
@@ -134,11 +126,11 @@ router.post('/', authMiddleware, async (req: AuthRequest, res) => {
             }
           }
         )
-        console.error(`依赖 ${name} 安装失败:`, error.message)
+        logger.error(`依赖 ${name} 安装失败:`, error.message)
       })
 
   } catch (error) {
-    console.error('添加依赖失败:', error)
+    logger.error('添加依赖失败:', error)
     res.status(500).json({
       success: false,
       error: { code: 'INTERNAL_ERROR', message: '添加依赖失败' }
@@ -167,7 +159,7 @@ router.get('/:name/status', authMiddleware, async (req: AuthRequest, res) => {
 
     res.json({ success: true, data: dep })
   } catch (error) {
-    console.error('获取依赖状态失败:', error)
+    logger.error('获取依赖状态失败:', error)
     res.status(500).json({
       success: false,
       error: { code: 'INTERNAL_ERROR', message: '获取依赖状态失败' }
@@ -180,7 +172,6 @@ router.get('/:name/status', authMiddleware, async (req: AuthRequest, res) => {
  * 删除依赖
  */
 router.delete('/:name', authMiddleware, async (req: AuthRequest, res) => {
-  console.log('[DEBUG] DELETE /api/dependencies/:name', req.params.name)
   try {
     const db = getDB()
     const name = req.params.name
@@ -191,8 +182,6 @@ router.delete('/:name', authMiddleware, async (req: AuthRequest, res) => {
       userId: new ObjectId(req.user!.userId)
     })
 
-    console.log('[DEBUG] Delete result:', result.deletedCount)
-
     if (result.deletedCount === 0) {
       return res.status(404).json({
         success: false,
@@ -202,12 +191,12 @@ router.delete('/:name', authMiddleware, async (req: AuthRequest, res) => {
 
     // 异步卸载包 (忽略错误)
     npmService.uninstallPackage(name).catch((error) => {
-      console.warn(`卸载 ${name} 失败:`, error.message)
+      logger.warn(`卸载 ${name} 失败:`, error.message)
     })
 
     res.json({ success: true })
   } catch (error) {
-    console.error('删除依赖失败:', error)
+    logger.error('删除依赖失败:', error)
     res.status(500).json({
       success: false,
       error: { code: 'INTERNAL_ERROR', message: '删除依赖失败' }

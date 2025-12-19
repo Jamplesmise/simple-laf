@@ -1,10 +1,11 @@
 import { Router, type IRouter } from 'express'
 import * as authService from '../services/auth.js'
 import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
+import { authLimiter } from '../middleware/rateLimit.js'
 
 const router: IRouter = Router()
 
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   try {
     const { username, password } = req.body
 
@@ -35,7 +36,7 @@ router.post('/register', async (req, res) => {
   }
 })
 
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { username, password } = req.body
 

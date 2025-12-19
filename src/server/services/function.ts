@@ -107,3 +107,64 @@ export async function remove(id: string, userId: string): Promise<boolean> {
   })
   return result.deletedCount > 0
 }
+
+export async function rename(
+  id: string,
+  userId: string,
+  newName: string
+): Promise<{ success: boolean; newPath?: string; error?: string }> {
+  const db = getDB()
+  const userOid = new ObjectId(userId)
+  const funcOid = new ObjectId(id)
+
+  // 获取当前函数
+  const func = await db.collection<CloudFunction>('functions').findOne({
+    _id: funcOid,
+    userId: userOid
+  })
+
+  if (!func) {
+    return { success: false, error: '函数不存在' }
+  }
+
+  // 计算新路径
+  let newPath = newName
+  if (func.folderId) {
+    const folder = await db.collection('folders').findOne({
+      _id: func.folderId,
+      userId: userOid
+    })
+    if (folder) {
+      newPath = `${folder.path}/${newName}`
+    }
+  }
+
+  // 检查新路径是否已存在
+  const existing = await db.collection<CloudFunction>('functions').findOne({
+    path: newPath,
+    userId: userOid,
+    _id: { $ne: funcOid }
+  })
+
+  if (existing) {
+    return { success: false, error: '已存在同名函数' }
+  }
+
+  // 更新函数名和路径
+  const result = await db.collection('functions').updateOne(
+    { _id: funcOid, userId: userOid },
+    {
+      $set: {
+        name: newName,
+        path: newPath,
+        updatedAt: new Date()
+      }
+    }
+  )
+
+  if (result.matchedCount === 0) {
+    return { success: false, error: '更新失败' }
+  }
+
+  return { success: true, newPath }
+}

@@ -8,7 +8,7 @@
 
 **当前状态**：基础版已完成，升级开发已完成 8 个 Sprint。
 
-**核心功能**：云函数编辑 | LSP 智能提示 | 即时执行调试 | NPM 依赖管理 | 版本控制 | Git 同步 | 定时任务 | Webhook | AI 辅助编程 | AI Debug | 自定义域名 | API Token | MongoDB 管理 | 函数审计日志
+**核心功能**：云函数编辑 | LSP 智能提示 | 即时执行调试 | NPM 依赖管理 | 版本控制 | Git 同步 | 定时任务 | Webhook | AI 辅助编程 | AI Debug | 自定义域名 | API Token | MongoDB 管理 | 函数审计日志 | 速率限制 | 函数重命名
 
 **不做什么**：多租户隔离、自动扩缩容、计费系统、团队协作、Kubernetes 部署
 
@@ -32,13 +32,15 @@ simple-ide/
 ├── .ai-context/              # AI 上下文文档 (详细说明)
 ├── .claude/CLAUDE.md         # 本文件 (快速入门)
 ├── docs/upgrade-phases/      # 升级版开发文档
-├── packages/
-│   ├── server/src/           # 后端
+├── src/
+│   ├── server/               # 后端
 │   │   ├── routes/           # API 路由
 │   │   ├── services/         # 业务逻辑 (含 ai/, functionAudit.ts)
+│   │   ├── middleware/       # 中间件 (auth, rateLimit)
+│   │   ├── utils/            # 工具函数 (logger)
 │   │   ├── engine/           # VM 执行引擎
 │   │   └── lsp/              # LSP WebSocket
-│   └── web/src/              # 前端
+│   └── client/               # 前端
 │       ├── pages/            # 页面
 │       ├── components/       # 组件
 │       ├── stores/           # Zustand 状态
@@ -109,11 +111,25 @@ docker-compose up -d
 /api/tokens/*         # API Token
 /api/database/*       # MongoDB 管理
 /api/audit/*          # 审计日志查询
-/invoke/:name         # 函数调用 (需认证)
+/invoke/*             # 函数调用 (支持多级路径，如 /invoke/api/user/login)
+/health               # 健康检查 (含数据库状态)
 /_/lsp                # LSP WebSocket
 ```
 
 详细 API 文档见 `.ai-context/3-api-contracts.md`
+
+## 速率限制
+
+| 路由 | 限制 | 说明 |
+|------|------|------|
+| `/api/auth/login` | 10次/5分钟 | 防止暴力破解 |
+| `/api/auth/register` | 10次/5分钟 | 防止批量注册 |
+| `/invoke/*` | 50次/秒 | 函数调用限制 |
+
+超出限制返回 `429 Too Many Requests`，响应头包含：
+- `X-RateLimit-Limit`: 限制次数
+- `X-RateLimit-Remaining`: 剩余次数
+- `X-RateLimit-Reset`: 重置时间戳
 
 ## 审计日志系统
 

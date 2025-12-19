@@ -2,6 +2,7 @@ import { Router, type IRouter } from 'express'
 import multer from 'multer'
 import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
 import * as storageService from '../services/storage.js'
+import logger from '../utils/logger.js'
 
 const router: IRouter = Router()
 
@@ -224,12 +225,7 @@ router.get('/objects/download', requireS3Configured, async (req: AuthRequest, re
 router.post('/objects/delete', requireS3Configured, async (req: AuthRequest, res) => {
   const { bucket, keys } = req.body
 
-  // 调试日志
-  console.log('[DELETE] req.body:', JSON.stringify(req.body))
-  console.log('[DELETE] bucket:', bucket, 'keys:', keys)
-
   if (!bucket || !keys || !Array.isArray(keys) || keys.length === 0) {
-    console.log('[DELETE] 验证失败: bucket=', bucket, 'keys=', keys)
     res.status(400).json({
       success: false,
       error: { code: 'INVALID_INPUT', message: '请指定存储桶和要删除的文件' }

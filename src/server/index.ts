@@ -29,6 +29,7 @@ import auditRoutes from './routes/audit.js'
 import { setupLspWebSocket } from './lsp/index.js'
 import * as schedulerService from './services/scheduler.js'
 import * as customDomainService from './services/customDomain.js'
+import { migrateAllFunctionPaths } from './services/path.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -97,8 +98,27 @@ app.use('/api/audit', auditRoutes)
 app.use('/invoke', invokeRoutes)
 
 // 健康检查
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+app.get('/health', async (_req, res) => {
+  const health = {
+    status: 'ok' as 'ok' | 'degraded' | 'error',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    checks: {
+      database: 'ok' as 'ok' | 'error',
+    }
+  }
+
+  try {
+    // 检查数据库连接
+    const db = getDB()
+    await db.command({ ping: 1 })
+  } catch {
+    health.checks.database = 'error'
+    health.status = 'degraded'
+  }
+
+  const statusCode = health.status === 'ok' ? 200 : 503
+  res.status(statusCode).json(health)
 })
 
 // 生产环境: 托管前端静态文件
@@ -166,6 +186,16 @@ async function restoreDependencies() {
 async function main() {
   try {
     await connectDB()
+
+    // 迁移函数路径 (一次性迁移，幂等操作)
+    try {
+      const { migrated, fixed } = await migrateAllFunctionPaths()
+      if (migrated > 0 || fixed > 0) {
+        console.log(`函数路径迁移完成: ${migrated} 个新增, ${fixed} 个修复`)
+      }
+    } catch (err) {
+      console.error('函数路径迁移失败:', err)
+    }
 
     // 恢复依赖 (后台执行，不阻塞启动)
     restoreDependencies().catch((err) => {
