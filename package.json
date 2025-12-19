@@ -1,5 +1,5 @@
 {
-  "name": "simple-ide",
+  "name": "simple-laf",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -15,7 +15,9 @@
     "test:web": "pnpm --filter @simple-ide/web test",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:all": "pnpm test && pnpm test:e2e"
+    "test:all": "pnpm test && pnpm test:e2e",
+    "check:secrets": "node scripts/check-secrets.js .",
+    "precommit": "npm run check:secrets"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0"
