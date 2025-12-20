@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { Tooltip, Modal } from 'antd'
-import { Code, Database, Activity, Link, HardDrive } from 'lucide-react'
+import { Code, Database, Activity, Link, HardDrive, Globe } from 'lucide-react'
 import Header from '../components/Header'
 import FunctionTree from '../components/FunctionTree'
 import DependencyPanel from '../components/DependencyPanel'
@@ -13,6 +13,7 @@ import { AIConversationDialog } from '../components/AIConversationDialog'
 import GlobalSearch from '../components/GlobalSearch'
 import DatabasePanel from '../components/DatabasePanel'
 import StoragePanel from '../components/StoragePanel'
+import SitePanel from '../components/SitePanel'
 import StatisticsPanel from '../components/StatisticsPanel'
 import WebhookPanel from '../components/WebhookPanel'
 import { useThemeStore } from '../stores/theme'
@@ -46,6 +47,7 @@ export default function IDE() {
     { key: 'functions', icon: <Code size={20} strokeWidth={2} />, label: '云函数' },
     { key: 'database', icon: <Database size={20} strokeWidth={2} />, label: '集合' },
     { key: 'storage', icon: <HardDrive size={20} strokeWidth={2} />, label: '存储' },
+    { key: 'site', icon: <Globe size={20} strokeWidth={2} />, label: '站点' },
   ]
 
   // 工具导航项 - 弹窗面板
@@ -317,6 +319,13 @@ export default function IDE() {
         {/* 存储视图 */}
         {currentView === 'storage' && (
           <StoragePanel />
+        )}
+
+        {/* 站点视图 */}
+        {currentView === 'site' && (
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            <SitePanel />
+          </div>
         )}
 
         {/* 云函数视图 */}

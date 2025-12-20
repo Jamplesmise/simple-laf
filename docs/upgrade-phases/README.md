@@ -16,8 +16,9 @@
 | Sprint 4 | 结构与同步 | 文件夹管理 + Git 同步 | 1.5 天 | ✅ 完成 |
 | Sprint 5 | AI 辅助 | AI 代码生成 + 解耦 + 诊断 + 日志分析 | 2 天 | ✅ 完成 |
 | Sprint 6 | 数据管理 | MongoDB 集合管理 + S3 对象存储 | 5 天 | 🚧 待开发 |
+| Sprint 9 | 站点托管 | 静态站点托管 + AI 文件操作 | 5 天 | 📋 计划中 |
 
-**总计**：13 天 (2人并行) / 14 天 (单人)
+**总计**：18 天 (2人并行) / 19 天 (单人)
 
 ---
 
@@ -41,7 +42,10 @@ docs/upgrade-phases/
 ├── sprint-5-ai/                  # Sprint 5：AI 辅助
 │   ├── CONTEXT.md
 │   └── TASKS.md
-└── sprint-6-data/                # Sprint 6：数据管理
+├── sprint-6-data/                # Sprint 6：数据管理
+│   ├── CONTEXT.md
+│   └── TASKS.md
+└── sprint-9-site/                # Sprint 9：站点托管
     ├── CONTEXT.md
     └── TASKS.md
 ```
@@ -85,6 +89,8 @@ Sprint 6 只依赖 Sprint 1 (基础架构)，可提前开发
 | M14 | 索引管理功能 | Sprint 6 |
 | M15 | S3 对象存储连接和配置 | Sprint 6 |
 | M16 | 文件浏览和上传下载 | Sprint 6 |
+| M17 | 静态站点文件托管和预览 | Sprint 9 |
+| M18 | AI 创建/编辑站点文件 | Sprint 9 |
 
 ---
 

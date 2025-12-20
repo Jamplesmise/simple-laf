@@ -1,7 +1,10 @@
 import { Router, type IRouter } from 'express'
+import { ObjectId } from 'mongodb'
 import multer from 'multer'
 import { authMiddleware, type AuthRequest } from '../middleware/auth.js'
 import * as storageService from '../services/storage.js'
+import * as siteFileService from '../services/siteFile.js'
+import * as siteService from '../services/site.js'
 import logger from '../utils/logger.js'
 
 const router: IRouter = Router()
@@ -235,6 +238,35 @@ router.post('/objects/delete', requireS3Configured, async (req: AuthRequest, res
 
   try {
     await storageService.deleteObjects(bucket, keys)
+
+    // 同步删除站点文件记录 (如果是站点文件)
+    // 站点文件的 S3 key 格式: sites/{userId}/{filePath}
+    const siteFileKeys = keys.filter((k: string) => k.startsWith('sites/'))
+    if (siteFileKeys.length > 0) {
+      const userIdSet = new Set<string>()
+      for (const key of siteFileKeys) {
+        const match = key.match(/^sites\/([a-f0-9]{24})(\/.+)$/)
+        if (match) {
+          const [, userIdStr, filePath] = match
+          userIdSet.add(userIdStr)
+          try {
+            const userId = new ObjectId(userIdStr)
+            await siteFileService.removeOrphan(userId, filePath)
+          } catch {
+            // 忽略单个文件删除失败
+          }
+        }
+      }
+      // 更新统计
+      for (const userIdStr of userIdSet) {
+        try {
+          await siteService.updateStats(new ObjectId(userIdStr))
+        } catch {
+          // 忽略统计更新失败
+        }
+      }
+    }
+
     res.json({ success: true })
   } catch (err) {
     const message = err instanceof Error ? err.message : '删除对象失败'

@@ -26,6 +26,9 @@ import apiTokenRoutes from './routes/apiToken.js'
 import databaseRoutes from './routes/database.js'
 import storageRoutes from './routes/storage.js'
 import auditRoutes from './routes/audit.js'
+import siteRoutes from './routes/site.js'
+import siteFilesRoutes from './routes/site-files.js'
+import siteServeRoutes from './routes/site-serve.js'
 import { setupLspWebSocket } from './lsp/index.js'
 import * as schedulerService from './services/scheduler.js'
 import * as customDomainService from './services/customDomain.js'
@@ -95,7 +98,11 @@ app.use('/api/tokens', apiTokenRoutes)
 app.use('/api/database', databaseRoutes)
 app.use('/api/storage', storageRoutes)
 app.use('/api/audit', auditRoutes)
+app.use('/api/site', siteRoutes)
+app.use('/api/site/files', siteFilesRoutes)
 app.use('/invoke', invokeRoutes)
+// 静态站点服务 (独立访问控制)
+app.use('/site', siteServeRoutes)
 
 // 健康检查
 app.get('/health', async (_req, res) => {

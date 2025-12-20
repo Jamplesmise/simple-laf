@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type ViewType = 'functions' | 'database' | 'storage'
+export type ViewType = 'functions' | 'database' | 'storage' | 'site'
 
 interface ViewState {
   currentView: ViewType

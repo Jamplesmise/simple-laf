@@ -9,6 +9,7 @@ import {
   DeleteObjectCommand,
   DeleteObjectsCommand,
   HeadBucketCommand,
+  HeadObjectCommand,
 } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { Upload } from '@aws-sdk/lib-storage'
@@ -276,6 +277,23 @@ export async function downloadObject(
 }
 
 /**
+ * 检查对象是否存在
+ */
+export async function headObject(bucket: string, key: string): Promise<{ size: number; lastModified?: Date }> {
+  const client = getClient()
+  const result = await client.send(
+    new HeadObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    })
+  )
+  return {
+    size: result.ContentLength || 0,
+    lastModified: result.LastModified,
+  }
+}
+
+/**
  * 删除单个对象
  */
 export async function deleteObject(bucket: string, key: string): Promise<void> {
@@ -290,25 +308,53 @@ export async function deleteObject(bucket: string, key: string): Promise<void> {
 
 /**
  * 批量删除对象
+ * 注意: 某些 S3 兼容服务 (如 Sealos) 的批量删除需要 Content-MD5
+ * 这里使用逐个删除的方式来避免兼容性问题
  */
 export async function deleteObjects(bucket: string, keys: string[]): Promise<void> {
   if (keys.length === 0) return
 
   const client = getClient()
 
-  // S3 批量删除限制 1000 个
-  const batchSize = 1000
-  for (let i = 0; i < keys.length; i += batchSize) {
-    const batch = keys.slice(i, i + batchSize)
-    await client.send(
-      new DeleteObjectsCommand({
-        Bucket: bucket,
-        Delete: {
-          Objects: batch.map((key) => ({ Key: key })),
-          Quiet: true, // 不返回删除结果，提高性能
-        },
-      })
-    )
+  // 对于少量文件，使用逐个删除 (更兼容)
+  if (keys.length <= 10) {
+    for (const key of keys) {
+      await client.send(
+        new DeleteObjectCommand({
+          Bucket: bucket,
+          Key: key,
+        })
+      )
+    }
+    return
+  }
+
+  // 对于大量文件，尝试批量删除
+  try {
+    const batchSize = 1000
+    for (let i = 0; i < keys.length; i += batchSize) {
+      const batch = keys.slice(i, i + batchSize)
+      await client.send(
+        new DeleteObjectsCommand({
+          Bucket: bucket,
+          Delete: {
+            Objects: batch.map((key) => ({ Key: key })),
+            Quiet: true,
+          },
+        })
+      )
+    }
+  } catch (error) {
+    // 如果批量删除失败，回退到逐个删除
+    console.warn('Batch delete failed, falling back to single delete:', error)
+    for (const key of keys) {
+      await client.send(
+        new DeleteObjectCommand({
+          Bucket: bucket,
+          Key: key,
+        })
+      )
+    }
   }
 }
 
