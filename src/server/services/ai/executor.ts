@@ -17,8 +17,21 @@ import type {
 } from './types.js'
 import * as siteService from '../site.js'
 import * as siteFileService from '../siteFile.js'
-import { allTools, functionTools, analysisTools, debugTools, logTools, generateToolDescriptions, type AITool } from './tools.js'
+import { allTools, generateToolDescriptions } from './tools.js'
 import { logAIAction } from '../functionAudit.js'
+// 导入模块化提示词
+import {
+  FUNCTION_CODE_FORMAT,
+  CODE_STANDARDS,
+  TOOL_USE_FORMAT,
+  FUNCTION_OPERATIONS,
+  SITE_OPERATIONS,
+  SITE_BEST_PRACTICES,
+  DEBUG_PROMPT,
+  REFACTOR_PROMPT,
+  EXPLAIN_PROMPT,
+  MERGE_PROMPT,
+} from './prompts/index.js'
 
 /**
  * AI 执行器配置
@@ -659,37 +672,17 @@ export function getActionSystemPrompt(context: {
   existingFunctions?: Array<{ id: string; name: string; code: string }>
   folders?: Array<{ id: string; name: string; path: string }>
 }): string {
+  const existingFunctionsSection = context.existingFunctions?.length
+    ? `**现有函数：**\n${context.existingFunctions.map(f => `- ${f.name} (ID: ${f.id})`).join('\n')}\n`
+    : '暂无函数'
+
+  const foldersSection = context.folders?.length
+    ? `\n**文件夹结构：**\n${context.folders.map(f => `- ${f.name} (ID: ${f.id}, 路径: ${f.path})`).join('\n')}\n`
+    : '暂无文件夹'
+
   return `你是一个云函数开发助手，负责帮助用户管理 Serverless 云函数。
 
-## 云函数代码格式
-
-所有云函数必须遵循以下格式：
-
-\`\`\`typescript
-import cloud from '@/cloud-sdk'
-
-export default async function (ctx: FunctionContext) {
-  // 你的代码
-  return { data: 'result' }
-}
-\`\`\`
-
-**FunctionContext 包含：**
-- \`ctx.body\`: 请求体 (POST/PUT 请求的 JSON 数据)
-- \`ctx.query\`: URL 查询参数 (如 ?id=123)
-- \`ctx.headers\`: 请求头
-- \`ctx.method\`: HTTP 方法 (GET/POST/PUT/DELETE 等)
-
-**cloud SDK 提供：**
-- \`cloud.database()\`: 获取 MongoDB 数据库实例
-- \`cloud.fetch(url, options)\`: 发起 HTTP 请求
-
-**导入其他云函数：**
-使用 \`@/函数名\` 或 \`@/函数路径\` 导入其他函数：
-\`\`\`typescript
-import { someHelper } from '@/utils/helpers'
-import validateInput from '@/validators/inputValidator'
-\`\`\`
+${FUNCTION_CODE_FORMAT}
 
 ## 输出格式
 
@@ -726,32 +719,14 @@ import validateInput from '@/validators/inputValidator'
 - \`siteDeleteFile\`: 删除站点文件 { type, path, description? }
 - \`siteCreateFolder\`: 创建站点文件夹 { type, path, description? }
 
-**站点文件最佳实践：**
-1. **默认使用单文件 HTML** - 将 CSS 放在 \`<style>\` 标签中，JS 放在 \`<script>\` 标签中，这样更简单且不会有文件联动问题
-2. **如果需要分离文件** - 必须先创建文件夹（如 \`/login\`），然后将相关的 HTML/CSS/JS 都放在该文件夹内（如 \`/login/index.html\`、\`/login/style.css\`、\`/login/script.js\`）
-3. **不要将多个页面的文件混在根目录** - 每个页面应该有自己的文件夹
-4. **HTML 文件命名** - 页面主文件命名为 \`index.html\`，这样访问 \`/login/\` 就能直接显示
+${SITE_BEST_PRACTICES}
 
 ## 当前环境
 
-${context.existingFunctions?.length ? `**现有函数：**
-${context.existingFunctions.map(f => `- ${f.name} (ID: ${f.id})`).join('\n')}
-` : '暂无函数'}
-${context.folders?.length ? `
-**文件夹结构：**
-${context.folders.map(f => `- ${f.name} (ID: ${f.id}, 路径: ${f.path})`).join('\n')}
-` : '暂无文件夹'}
+${existingFunctionsSection}
+${foldersSection}
 
-## 代码规范
-
-1. 使用 \`import cloud from '@/cloud-sdk'\` 导入云 SDK（数据库、HTTP 请求）
-2. 使用 \`import { xxx } from '@/函数路径'\` 导入其他云函数
-3. 使用 \`export default async function (ctx: FunctionContext)\` 导出主函数
-4. 可以使用命名导出 \`export function xxx()\` 供其他函数导入
-5. 函数名使用 camelCase 命名（如 getUserList, createOrder）
-6. 使用 TypeScript，添加必要的类型注解
-7. 包含基础错误处理（try-catch）
-8. 返回格式统一为 \`{ data: ... }\` 或 \`{ error: ... }\`
+${CODE_STANDARDS}
 
 ## 重要提示
 
@@ -824,55 +799,13 @@ ${customPromptSection}
 
 ### 方式二：使用工具
 
-当用户需要执行实际操作时，使用以下格式调用工具：
-
-<tool_use>
-<tool>工具名称</tool>
-<arguments>
-{
-  "参数名": "参数值"
-}
-</arguments>
-</tool_use>
-
-你可以在一次回复中：
-- 只进行自然语言回复
-- 只使用工具
-- 混合使用：先解释你要做什么，然后调用工具
+${TOOL_USE_FORMAT}
 
 ## 可用工具
 
 ${generateToolDescriptions(allTools)}
 
-## 云函数代码格式
-
-所有云函数必须遵循以下格式：
-
-\`\`\`typescript
-import cloud from '@/cloud-sdk'
-
-export default async function (ctx: FunctionContext) {
-  // 你的代码
-  return { data: 'result' }
-}
-\`\`\`
-
-**FunctionContext 包含：**
-- \`ctx.body\`: 请求体 (POST/PUT 请求的 JSON 数据)
-- \`ctx.query\`: URL 查询参数 (如 ?id=123)
-- \`ctx.headers\`: 请求头
-- \`ctx.method\`: HTTP 方法 (GET/POST/PUT/DELETE 等)
-
-**cloud SDK 提供：**
-- \`cloud.database()\`: 获取 MongoDB 数据库实例
-- \`cloud.fetch(url, options)\`: 发起 HTTP 请求
-
-**导入其他云函数：**
-使用 \`@/函数名\` 或 \`@/函数路径\` 直接导入：
-\`\`\`typescript
-import { someHelper } from '@/utils/helpers'
-import validateInput from '@/validators/inputValidator'
-\`\`\`
+${FUNCTION_CODE_FORMAT}
 
 ## 当前环境
 
@@ -881,16 +814,7 @@ ${foldersSection}
 ${referencedFunctionsSection}
 ${logSummarySection}
 
-## 代码规范
-
-1. 使用 \`import cloud from '@/cloud-sdk'\` 导入云 SDK（数据库、HTTP 请求）
-2. 使用 \`import { xxx } from '@/函数路径'\` 导入其他云函数
-3. 使用 \`export default async function (ctx: FunctionContext)\` 导出主函数
-4. 可以使用命名导出 \`export function xxx()\` 供其他函数导入
-5. 函数名使用 camelCase 命名（如 getUserList, createOrder）
-6. 使用 TypeScript，添加必要的类型注解
-7. 包含基础错误处理（try-catch）
-8. 返回格式统一为 \`{ data: ... }\` 或 \`{ error: ... }\`
+${CODE_STANDARDS}
 
 ## 示例
 
@@ -941,50 +865,16 @@ ${context.referencedFunctions?.length ? `\n**目标函数：**\n${context.refere
 
   switch (type) {
     case 'debug':
-      return `你是一个专业的代码调试助手。你的任务是：
-
-1. 分析代码，识别潜在问题
-2. 生成测试用例验证功能
-3. 根据测试结果诊断问题
-4. 提供修复方案
-
-${baseContext}
-
-请按照以下步骤进行调试，并输出结构化的调试结果。`
+      return `${DEBUG_PROMPT}\n${baseContext}`
 
     case 'refactor':
-      return `你是一个代码重构专家。你的任务是分析代码是否需要重构。
-
-评估标准：
-- 代码行数是否过长（> 100 行）
-- 函数是否承担过多职责
-- 是否存在重复逻辑
-- 嵌套层级是否过深
-- 命名是否清晰
-
-${baseContext}
-
-注意：不要强制拆分，如果代码结构良好就保持原样。只在确实需要时才建议重构。`
+      return `${REFACTOR_PROMPT}\n${baseContext}`
 
     case 'explain':
-      return `你是一个代码讲解专家。请详细解释以下代码的功能、实现逻辑和关键细节。
-
-${baseContext}
-
-请用清晰的语言解释，适当使用代码片段辅助说明。`
+      return `${EXPLAIN_PROMPT}\n${baseContext}`
 
     case 'merge':
-      return `你是一个代码合并分析师。请分析以下多个函数是否适合合并。
-
-评估标准：
-- 功能是否相关或重叠
-- 是否存在重复代码
-- 合并后是否会使代码更清晰
-- 合并后函数是否会过于复杂
-
-${baseContext}
-
-注意：只有在合并确实有益时才建议合并。如果函数职责不同，应保持分离。`
+      return `${MERGE_PROMPT}\n${baseContext}`
 
     default:
       return getFlexibleSystemPrompt(context)
