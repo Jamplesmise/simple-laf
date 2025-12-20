@@ -6,9 +6,9 @@
 
 **Simple IDE** - 轻量级 Serverless Web IDE，参考 [laf](https://github.com/labring/laf) 核心功能实现。
 
-**当前状态**：基础版已完成，升级开发已完成 8 个 Sprint。
+**当前状态**：v2.0.0，升级开发已完成 9 个 Sprint。
 
-**核心功能**：云函数编辑 | LSP 智能提示 | 即时执行调试 | NPM 依赖管理 | 版本控制 | Git 同步 | 定时任务 | Webhook | AI 辅助编程 | AI Debug | 自定义域名 | API Token | MongoDB 管理 | 函数审计日志 | 速率限制 | 函数重命名
+**核心功能**：云函数编辑 | LSP 智能提示 | 即时执行调试 | NPM 依赖管理 | 版本控制 | Git 同步 | 定时任务 | Webhook | AI 辅助编程 | AI Debug | 自定义域名 | API Token | MongoDB 管理 | 函数审计日志 | 速率限制 | 函数重命名 | **站点托管**
 
 **不做什么**：多租户隔离、自动扩缩容、计费系统、团队协作、Kubernetes 部署
 
@@ -91,6 +91,9 @@ docker-compose up -d
 | `ai_*` | AI 相关 (providers/models/conversations/messages/prompts) |
 | `custom_domains` | 自定义域名 |
 | `api_tokens` | API Token |
+| `sites` | 站点配置 |
+| `site_files` | 站点文件记录 |
+| `site_file_versions` | 站点文件版本 |
 
 ## 主要 API 路由
 
@@ -111,7 +114,11 @@ docker-compose up -d
 /api/tokens/*         # API Token
 /api/database/*       # MongoDB 管理
 /api/audit/*          # 审计日志查询
+/api/site             # 站点配置
+/api/site/files/*     # 站点文件管理/版本控制
+/api/storage/*        # S3 对象存储
 /invoke/*             # 函数调用 (支持多级路径，如 /invoke/api/user/login)
+/site/:userId/*       # 站点静态文件访问
 /health               # 健康检查 (含数据库状态)
 /_/lsp                # LSP WebSocket
 ```
@@ -169,6 +176,29 @@ GET /api/audit                    # 审计日志列表 (支持筛选)
 GET /api/audit/function/:id       # 指定函数的审计日志
 GET /api/audit/stats              # 审计统计
 ```
+
+## 站点托管 (Sprint 9)
+
+静态站点托管功能，支持 HTML/CSS/JS 等静态文件管理。
+
+**核心功能**：
+- 站点文件树管理（新建/重命名/删除文件和文件夹）
+- 文件版本控制和回滚
+- AI 建站助手（创建/修改站点文件）
+- 站点预览（桌面/平板/手机视图）
+- S3 对象存储集成
+
+**文件存储**：
+- 文件内容存储在 S3（路径：`sites/{userId}/{filePath}`）
+- 文件元信息存储在 MongoDB（`site_files` 集合）
+- 删除时自动同步清理 S3 和 MongoDB
+
+**AI 建站最佳实践**：
+- 默认使用单文件 HTML（CSS 放 `<style>`，JS 放 `<script>`）
+- 如需分离文件，先创建文件夹再将相关文件放入
+- 页面主文件命名为 `index.html`
+
+**访问地址**：`/site/{userId}/` 或 `/site/{userId}/{filePath}`
 
 ## 云函数代码格式
 

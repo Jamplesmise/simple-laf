@@ -262,6 +262,93 @@ export const debugTools: AITool[] = [
 ]
 
 /**
+ * 站点文件工具
+ *
+ * 最佳实践：
+ * 1. 默认使用单文件 HTML（内联 CSS 和 JS），避免文件联动问题
+ * 2. 如果需要分离文件，先创建文件夹，再将相关文件放入
+ * 3. 页面主文件命名为 index.html
+ */
+export const siteTools: AITool[] = [
+  {
+    name: 'site_create_file',
+    description: '创建站点文件。默认使用单文件 HTML（CSS 放 <style>，JS 放 <script>）。如需分离文件，先用 site_create_folder 创建文件夹，再将文件放入该文件夹',
+    parameters: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: '文件路径。单页面用 "/index.html"；多页面用 "/页面名/index.html"（如 "/login/index.html"）',
+        },
+        content: {
+          type: 'string',
+          description: '文件内容。HTML 文件应包含完整的 DOCTYPE、head、body，CSS/JS 默认内联',
+        },
+        description: {
+          type: 'string',
+          description: '文件描述',
+        },
+      },
+      required: ['path', 'content'],
+    },
+  },
+  {
+    name: 'site_update_file',
+    description: '更新站点文件内容。当用户要求修改现有的静态文件时使用',
+    parameters: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: '要更新的文件路径',
+        },
+        content: {
+          type: 'string',
+          description: '新的文件内容',
+        },
+        description: {
+          type: 'string',
+          description: '修改说明',
+        },
+      },
+      required: ['path', 'content'],
+    },
+  },
+  {
+    name: 'site_delete_file',
+    description: '删除站点文件。当用户明确要求删除某个静态文件时使用',
+    parameters: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: '要删除的文件路径',
+        },
+        reason: {
+          type: 'string',
+          description: '删除原因',
+        },
+      },
+      required: ['path'],
+    },
+  },
+  {
+    name: 'site_create_folder',
+    description: '创建站点文件夹。当用户要求创建目录来组织静态文件时使用',
+    parameters: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: '文件夹路径，如 "/css"、"/js/lib"',
+        },
+      },
+      required: ['path'],
+    },
+  },
+]
+
+/**
  * 日志分析工具
  */
 export const logTools: AITool[] = [
@@ -298,6 +385,7 @@ export const allTools: AITool[] = [
   ...analysisTools,
   ...debugTools,
   ...logTools,
+  ...siteTools,
 ]
 
 /**
@@ -310,6 +398,11 @@ export const toolToOperationType: Record<string, string> = {
   rename_function: 'renameFunction',
   move_function: 'moveFunction',
   create_folder: 'createFolder',
+  // 站点文件操作
+  site_create_file: 'siteCreateFile',
+  site_update_file: 'siteUpdateFile',
+  site_delete_file: 'siteDeleteFile',
+  site_create_folder: 'siteCreateFolder',
 }
 
 /**

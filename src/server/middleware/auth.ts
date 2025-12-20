@@ -77,6 +77,13 @@ export async function authMiddleware(
 }
 
 /**
+ * 验证 JWT token
+ */
+export function verifyToken(token: string): AuthPayload {
+  return jwt.verify(token, config.jwtSecret) as AuthPayload
+}
+
+/**
  * 扩展认证中间件 - 支持 JWT 和 develop token
  * 用于 invoke 等需要支持开发调试的路由
  */

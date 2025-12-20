@@ -152,6 +152,11 @@ export type AIOperationType =
   | 'renameFunction'    // 重命名函数
   | 'createFolder'      // 创建文件夹
   | 'moveFunction'      // 移动函数到文件夹
+  // 站点文件操作
+  | 'siteCreateFile'    // 创建站点文件
+  | 'siteUpdateFile'    // 更新站点文件
+  | 'siteDeleteFile'    // 删除站点文件
+  | 'siteCreateFolder'  // 创建站点文件夹
 
 // AI 操作基础接口
 interface AIOperationBase {
@@ -201,6 +206,34 @@ export interface MoveFunctionOperation extends AIOperationBase {
   targetFolderId?: string  // null 表示移到根目录
 }
 
+// ==================== 站点文件操作 ====================
+
+// 创建站点文件操作
+export interface SiteCreateFileOperation extends AIOperationBase {
+  type: 'siteCreateFile'
+  path: string            // 文件路径，如 "/index.html"
+  content: string         // 文件内容
+}
+
+// 更新站点文件操作
+export interface SiteUpdateFileOperation extends AIOperationBase {
+  type: 'siteUpdateFile'
+  path: string
+  content: string
+}
+
+// 删除站点文件操作
+export interface SiteDeleteFileOperation extends AIOperationBase {
+  type: 'siteDeleteFile'
+  path: string
+}
+
+// 创建站点文件夹操作
+export interface SiteCreateFolderOperation extends AIOperationBase {
+  type: 'siteCreateFolder'
+  path: string            // 文件夹路径，如 "/css"
+}
+
 // 所有操作的联合类型
 export type AIOperation =
   | CreateFunctionOperation
@@ -209,6 +242,10 @@ export type AIOperation =
   | RenameFunctionOperation
   | CreateFolderOperation
   | MoveFunctionOperation
+  | SiteCreateFileOperation
+  | SiteUpdateFileOperation
+  | SiteDeleteFileOperation
+  | SiteCreateFolderOperation
 
 // AI 执行计划
 export interface AIExecutionPlan {

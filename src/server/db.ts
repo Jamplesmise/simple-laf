@@ -126,6 +126,26 @@ export async function connectDB(): Promise<void> {
     { expiresAt: 1 },
     { expireAfterSeconds: 0 } // TTL 自动删除过期 token
   )
+  // 站点配置索引
+  await db.collection('sites').createIndex(
+    { userId: 1 },
+    { unique: true }
+  )
+  // 站点文件索引
+  await db.collection('site_files').createIndex(
+    { userId: 1, path: 1 },
+    { unique: true }
+  )
+  await db.collection('site_files').createIndex(
+    { userId: 1, isDirectory: 1 }
+  )
+  // 站点文件版本索引
+  await db.collection('site_file_versions').createIndex(
+    { fileId: 1, version: -1 }
+  )
+  await db.collection('site_file_versions').createIndex(
+    { userId: 1, filePath: 1 }
+  )
 }
 
 export async function closeDB(): Promise<void> {

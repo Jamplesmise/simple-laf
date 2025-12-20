@@ -10,7 +10,13 @@ import type {
   RenameFunctionOperation,
   CreateFolderOperation,
   MoveFunctionOperation,
+  SiteCreateFileOperation,
+  SiteUpdateFileOperation,
+  SiteDeleteFileOperation,
+  SiteCreateFolderOperation,
 } from './types.js'
+import * as siteService from '../site.js'
+import * as siteFileService from '../siteFile.js'
 import { allTools, functionTools, analysisTools, debugTools, logTools, generateToolDescriptions, type AITool } from './tools.js'
 import { logAIAction } from '../functionAudit.js'
 
@@ -105,6 +111,15 @@ export class AIExecutor {
           return await this.createFolder(operation)
         case 'moveFunction':
           return await this.moveFunction(operation)
+        // 站点文件操作
+        case 'siteCreateFile':
+          return await this.siteCreateFile(operation)
+        case 'siteUpdateFile':
+          return await this.siteUpdateFile(operation)
+        case 'siteDeleteFile':
+          return await this.siteDeleteFile(operation)
+        case 'siteCreateFolder':
+          return await this.siteCreateFolder(operation)
         default:
           return {
             operation,
@@ -498,6 +513,143 @@ export class AIExecutor {
       },
     }
   }
+
+  // ==================== 站点文件操作 ====================
+
+  /**
+   * 创建站点文件
+   */
+  private async siteCreateFile(op: SiteCreateFileOperation): Promise<AIOperationResult> {
+    try {
+      // 确保站点存在
+      const site = await siteService.getOrCreate(this.userId)
+
+      // 创建文件
+      await siteFileService.save(
+        this.userId,
+        op.path,
+        op.content,
+        site
+      )
+
+      return {
+        operation: op,
+        success: true,
+        result: {
+          name: op.path,
+        },
+      }
+    } catch (err) {
+      return {
+        operation: op,
+        success: false,
+        error: err instanceof Error ? err.message : '创建文件失败',
+      }
+    }
+  }
+
+  /**
+   * 更新站点文件
+   */
+  private async siteUpdateFile(op: SiteUpdateFileOperation): Promise<AIOperationResult> {
+    try {
+      // 检查文件是否存在
+      const existingFile = await siteFileService.get(this.userId, op.path)
+      if (!existingFile) {
+        return {
+          operation: op,
+          success: false,
+          error: `文件 "${op.path}" 不存在`,
+        }
+      }
+
+      // 获取站点配置
+      const site = await siteService.getOrCreate(this.userId)
+
+      // 更新文件
+      await siteFileService.save(
+        this.userId,
+        op.path,
+        op.content,
+        site
+      )
+
+      return {
+        operation: op,
+        success: true,
+        result: {
+          name: op.path,
+        },
+      }
+    } catch (err) {
+      return {
+        operation: op,
+        success: false,
+        error: err instanceof Error ? err.message : '更新文件失败',
+      }
+    }
+  }
+
+  /**
+   * 删除站点文件
+   */
+  private async siteDeleteFile(op: SiteDeleteFileOperation): Promise<AIOperationResult> {
+    try {
+      // 检查文件是否存在
+      const existingFile = await siteFileService.get(this.userId, op.path)
+      if (!existingFile) {
+        return {
+          operation: op,
+          success: false,
+          error: `文件 "${op.path}" 不存在`,
+        }
+      }
+
+      // 删除文件
+      await siteFileService.remove(this.userId, op.path)
+
+      return {
+        operation: op,
+        success: true,
+        result: {
+          name: op.path,
+        },
+      }
+    } catch (err) {
+      return {
+        operation: op,
+        success: false,
+        error: err instanceof Error ? err.message : '删除文件失败',
+      }
+    }
+  }
+
+  /**
+   * 创建站点文件夹
+   */
+  private async siteCreateFolder(op: SiteCreateFolderOperation): Promise<AIOperationResult> {
+    try {
+      // 确保站点存在
+      await siteService.getOrCreate(this.userId)
+
+      // 创建文件夹
+      await siteFileService.createDirectory(this.userId, op.path)
+
+      return {
+        operation: op,
+        success: true,
+        result: {
+          name: op.path,
+        },
+      }
+    } catch (err) {
+      return {
+        operation: op,
+        success: false,
+        error: err instanceof Error ? err.message : '创建文件夹失败',
+      }
+    }
+  }
 }
 
 /**
@@ -560,12 +712,25 @@ import validateInput from '@/validators/inputValidator'
 
 ## 可用操作类型
 
+### 云函数操作
 - \`createFunction\`: 创建新函数 { type, name, code, folderId?, description? }
 - \`updateFunction\`: 修改函数 { type, functionId, code, description? }
 - \`deleteFunction\`: 删除函数 { type, functionId, description? }
 - \`renameFunction\`: 重命名 { type, functionId, newName, description? }
 - \`createFolder\`: 创建文件夹 { type, name, parentId?, description? }
 - \`moveFunction\`: 移动函数 { type, functionId, targetFolderId?, description? }
+
+### 静态站点操作
+- \`siteCreateFile\`: 创建站点文件 { type, path, content, description? }
+- \`siteUpdateFile\`: 更新站点文件 { type, path, content, description? }
+- \`siteDeleteFile\`: 删除站点文件 { type, path, description? }
+- \`siteCreateFolder\`: 创建站点文件夹 { type, path, description? }
+
+**站点文件最佳实践：**
+1. **默认使用单文件 HTML** - 将 CSS 放在 \`<style>\` 标签中，JS 放在 \`<script>\` 标签中，这样更简单且不会有文件联动问题
+2. **如果需要分离文件** - 必须先创建文件夹（如 \`/login\`），然后将相关的 HTML/CSS/JS 都放在该文件夹内（如 \`/login/index.html\`、\`/login/style.css\`、\`/login/script.js\`）
+3. **不要将多个页面的文件混在根目录** - 每个页面应该有自己的文件夹
+4. **HTML 文件命名** - 页面主文件命名为 \`index.html\`，这样访问 \`/login/\` 就能直接显示
 
 ## 当前环境
 
