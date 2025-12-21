@@ -171,3 +171,196 @@ export function getInstalledVersion(name: string): string | null {
     return null
   }
 }
+
+/**
+ * 更新依赖审计结果
+ */
+export interface AuditVulnerability {
+  severity: 'info' | 'low' | 'moderate' | 'high' | 'critical'
+  package: string
+  title: string
+  fixAvailable: boolean
+  url?: string
+}
+
+/**
+ * 安全审计结果
+ */
+export interface AuditResult {
+  vulnerabilities: AuditVulnerability[]
+  summary: {
+    info: number
+    low: number
+    moderate: number
+    high: number
+    critical: number
+    total: number
+  }
+}
+
+/**
+ * 更新包结果
+ */
+export interface UpdateResult {
+  name: string
+  from: string
+  to: string
+}
+
+/**
+ * 更新依赖包
+ */
+export async function updatePackage(name: string, latest?: boolean): Promise<UpdateResult> {
+  const fromVersion = getInstalledVersion(name) || 'unknown'
+  const packageSpec = latest ? `${name}@latest` : name
+  const cmd = `pnpm update ${packageSpec} --registry=${REGISTRY}`
+
+  logger.debug(`[NPM] Running: ${cmd}`)
+
+  try {
+    await execAsync(cmd, {
+      cwd: PROJECT_ROOT,
+      timeout: 180000,
+      maxBuffer: 1024 * 1024 * 10,
+      env: { ...process.env, NODE_ENV: 'development' },
+    })
+
+    const toVersion = getInstalledVersion(name) || 'unknown'
+    logger.info(`[NPM] Updated ${name}: ${fromVersion} -> ${toVersion}`)
+
+    return {
+      name,
+      from: fromVersion,
+      to: toVersion,
+    }
+  } catch (error: unknown) {
+    const err = error as { stderr?: string; message?: string }
+    throw new Error(`更新失败: ${err.stderr || err.message}`)
+  }
+}
+
+/**
+ * 批量更新依赖包
+ */
+export async function updatePackages(names: string[], latest?: boolean): Promise<UpdateResult[]> {
+  const results: UpdateResult[] = []
+
+  for (const name of names) {
+    try {
+      const result = await updatePackage(name, latest)
+      results.push(result)
+    } catch (error) {
+      logger.warn(`[NPM] Failed to update ${name}:`, error)
+      results.push({
+        name,
+        from: getInstalledVersion(name) || 'unknown',
+        to: 'failed',
+      })
+    }
+  }
+
+  return results
+}
+
+/**
+ * 安全审计依赖
+ */
+export async function auditPackages(): Promise<AuditResult> {
+  try {
+    // pnpm audit 返回 JSON 格式的审计结果
+    const { stdout } = await execAsync('pnpm audit --json', {
+      cwd: PROJECT_ROOT,
+      timeout: 60000,
+      maxBuffer: 1024 * 1024 * 10,
+    })
+
+    const result = JSON.parse(stdout)
+
+    // 解析 pnpm audit 的 JSON 输出
+    const vulnerabilities: AuditVulnerability[] = []
+    const summary = {
+      info: 0,
+      low: 0,
+      moderate: 0,
+      high: 0,
+      critical: 0,
+      total: 0,
+    }
+
+    // pnpm audit 格式: { advisories: { id: { ... } }, metadata: { vulnerabilities: { ... } } }
+    if (result.advisories) {
+      for (const advisory of Object.values(result.advisories) as Array<Record<string, unknown>>) {
+        const severity = (advisory.severity as string || 'low').toLowerCase() as AuditVulnerability['severity']
+        vulnerabilities.push({
+          severity,
+          package: advisory.module_name as string,
+          title: advisory.title as string,
+          fixAvailable: !!advisory.patched_versions,
+          url: advisory.url as string,
+        })
+
+        if (severity in summary) {
+          summary[severity]++
+        }
+        summary.total++
+      }
+    }
+
+    // 如果 metadata 中有 vulnerabilities 统计，使用它
+    if (result.metadata?.vulnerabilities) {
+      Object.assign(summary, result.metadata.vulnerabilities)
+    }
+
+    return { vulnerabilities, summary }
+  } catch (error: unknown) {
+    const err = error as { stdout?: string; stderr?: string; message?: string }
+
+    // pnpm audit 在有漏洞时可能返回非零退出码，但 stdout 仍有有效数据
+    if (err.stdout) {
+      try {
+        const result = JSON.parse(err.stdout)
+        const vulnerabilities: AuditVulnerability[] = []
+        const summary = {
+          info: 0,
+          low: 0,
+          moderate: 0,
+          high: 0,
+          critical: 0,
+          total: 0,
+        }
+
+        if (result.advisories) {
+          for (const advisory of Object.values(result.advisories) as Array<Record<string, unknown>>) {
+            const severity = (advisory.severity as string || 'low').toLowerCase() as AuditVulnerability['severity']
+            vulnerabilities.push({
+              severity,
+              package: advisory.module_name as string,
+              title: advisory.title as string,
+              fixAvailable: !!advisory.patched_versions,
+              url: advisory.url as string,
+            })
+
+            if (severity in summary) {
+              summary[severity]++
+            }
+            summary.total++
+          }
+        }
+
+        if (result.metadata?.vulnerabilities) {
+          Object.assign(summary, result.metadata.vulnerabilities)
+        }
+
+        return { vulnerabilities, summary }
+      } catch {
+        // 解析失败，返回空结果
+      }
+    }
+
+    // 如果完全失败，返回空结果（可能是网络问题或没有漏洞）
+    return {
+      vulnerabilities: [],
+      summary: { info: 0, low: 0, moderate: 0, high: 0, critical: 0, total: 0 },
+    }
+  }
+}

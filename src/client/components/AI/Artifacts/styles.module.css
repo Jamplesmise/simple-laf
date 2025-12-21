@@ -1,0 +1,301 @@
+/**
+ * Artifacts 预览组件样式
+ */
+
+/* ============================================
+   HTML 预览容器
+   ============================================ */
+
+.previewContainer {
+  margin: 16px 0;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.previewContainer:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 嵌入模式（在代码块中使用） */
+.previewContainer.embedded,
+:global(.codeBlockWithPreview) .previewContainer {
+  margin: 0;
+  border-radius: 10px 10px 0 0;
+}
+
+/* 全屏模式 */
+.fullscreen {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  height: 90vh;
+  z-index: 1000;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.fullscreenOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+/* ============================================
+   预览头部
+   ============================================ */
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #f8fafc;
+}
+
+.previewTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.previewIcon {
+  font-size: 16px;
+}
+
+.previewLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b82f6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.previewName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+  margin-left: 4px;
+}
+
+.previewActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.previewAction {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.previewAction:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.previewActionActive {
+  background: #dbeafe;
+  color: #3b82f6;
+}
+
+.previewActionActive:hover {
+  background: #bfdbfe;
+  color: #2563eb;
+}
+
+/* ============================================
+   预览内容
+   ============================================ */
+
+.previewBody {
+  height: var(--preview-height, 300px);
+  overflow: hidden;
+  background: #fff;
+}
+
+.fullscreen .previewBody {
+  height: calc(100% - 48px);
+}
+
+.previewFrame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #fff;
+}
+
+.previewCode {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 16px;
+  overflow: auto;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #334155;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ============================================
+   React 预览
+   ============================================ */
+
+.reactPreviewError {
+  padding: 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  margin: 16px;
+}
+
+.reactPreviewErrorTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #dc2626;
+  margin-bottom: 8px;
+}
+
+.reactPreviewErrorMessage {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  color: #991b1b;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.reactPreviewLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.reactPreviewContent {
+  padding: 16px;
+  height: 100%;
+  overflow: auto;
+}
+
+/* ============================================
+   Mermaid 预览
+   ============================================ */
+
+.mermaidContainer {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  overflow: auto;
+}
+
+.mermaidContainer svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ============================================
+   SVG 预览
+   ============================================ */
+
+.svgContainer {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  overflow: auto;
+}
+
+.svgContainer svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ============================================
+   通用 Artifact 卡片
+   ============================================ */
+
+.artifactWrapper {
+  margin: 16px 0;
+}
+
+/* ============================================
+   暗色模式
+   ============================================ */
+
+:global(.dark) .previewContainer {
+  border-color: #334155;
+}
+
+:global(.dark) .previewHeader {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+:global(.dark) .previewLabel {
+  color: #60a5fa;
+}
+
+:global(.dark) .previewName {
+  color: #e2e8f0;
+}
+
+:global(.dark) .previewAction {
+  color: #94a3b8;
+}
+
+:global(.dark) .previewAction:hover {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+:global(.dark) .previewActionActive {
+  background: #1e3a5f;
+  color: #60a5fa;
+}
+
+:global(.dark) .previewBody {
+  background: #1e293b;
+}
+
+:global(.dark) .previewCode {
+  color: #e2e8f0;
+}
+
+:global(.dark) .reactPreviewError {
+  background: #450a0a;
+  border-color: #7f1d1d;
+}
+
+:global(.dark) .reactPreviewErrorTitle {
+  color: #f87171;
+}
+
+:global(.dark) .reactPreviewErrorMessage {
+  color: #fca5a5;
+}

@@ -2,14 +2,18 @@
  * 消息面板
  *
  * 显示对话消息列表
+ * Sprint 10.2: 添加消息操作（编辑/分支/复制/反馈）
+ * Sprint 10.1: 添加 AI 状态面板
  */
 
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { Spin, Avatar } from 'antd'
 import { UserOutlined, RobotOutlined, MessageOutlined } from '@ant-design/icons'
 import { useThemeColors } from '@/hooks/useTheme'
 import type { AIMessage } from '@/api/aiConversation'
 import { MessageContent } from './MessageContent'
+import { MessageActions } from './MessageActions'
+import { StatusPanel, type StatusPanelData } from '@/components/AI/StatusPanel'
 import styles from './styles.module.css'
 
 interface MessagePanelProps {
@@ -18,6 +22,11 @@ interface MessagePanelProps {
   streamContent: string
   streamStatus: string
   currentTitle?: string
+  // Sprint 10.1: 状态面板数据
+  statusPanelData?: StatusPanelData
+  // Sprint 10.2: 消息操作回调
+  onEditSuccess?: (regenerating: boolean) => void
+  onBranchSuccess?: (conversationId: string) => void
 }
 
 export function MessagePanel({
@@ -26,9 +35,14 @@ export function MessagePanel({
   streamContent,
   streamStatus,
   currentTitle,
+  statusPanelData,
+  onEditSuccess,
+  onBranchSuccess,
 }: MessagePanelProps) {
   const { t } = useThemeColors()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  // Sprint 10.1: 状态面板展开状态
+  const [statusPanelExpanded, setStatusPanelExpanded] = useState(false)
 
   // 自动滚动到底部
   useEffect(() => {
@@ -57,12 +71,28 @@ export function MessagePanel({
   return (
     <div className={styles.messageArea} style={{ background: t.bgCard }}>
       {messages.map(msg => (
-        <MessageItem key={msg._id} message={msg} />
+        <MessageItem
+          key={msg._id}
+          message={msg}
+          onEditSuccess={onEditSuccess}
+          onBranchSuccess={onBranchSuccess}
+        />
       ))}
 
       {/* 流式输出 */}
       {(streamContent || streamStatus) && (
         <StreamingMessage content={streamContent} status={streamStatus} />
+      )}
+
+      {/* Sprint 10.1: AI 状态面板 */}
+      {statusPanelData && statusPanelData.status !== 'idle' && (
+        <div className={styles.statusPanelWrapper}>
+          <StatusPanel
+            data={statusPanelData}
+            expanded={statusPanelExpanded}
+            onToggleExpand={() => setStatusPanelExpanded(!statusPanelExpanded)}
+          />
+        </div>
       )}
 
       <div ref={messagesEndRef} />
@@ -73,7 +103,13 @@ export function MessagePanel({
 /**
  * 单条消息
  */
-function MessageItem({ message }: { message: AIMessage }) {
+interface MessageItemProps {
+  message: AIMessage
+  onEditSuccess?: (regenerating: boolean) => void
+  onBranchSuccess?: (conversationId: string) => void
+}
+
+function MessageItem({ message, onEditSuccess, onBranchSuccess }: MessageItemProps) {
   const { t } = useThemeColors()
   const isUser = message.role === 'user'
 
@@ -93,6 +129,14 @@ function MessageItem({ message }: { message: AIMessage }) {
         ) : (
           <MessageContent content={message.content} messageId={message._id} />
         )}
+      </div>
+      {/* Sprint 10.2: 消息操作按钮 */}
+      <div className={styles.messageActions}>
+        <MessageActions
+          message={message}
+          onEditSuccess={onEditSuccess}
+          onBranchSuccess={onBranchSuccess}
+        />
       </div>
     </div>
   )

@@ -173,6 +173,42 @@ export default async function (ctx: FunctionContext) {
 
 前端入口: AI 对话框 → 输入 `/` → 选择日志分析命令
 
+## AI 项目文件操作 (Sprint 14)
+
+AI 助手可以读取和修改项目源代码，实现真正的 AI 辅助开发：
+
+### 可用工具
+
+| 工具 | 功能 | 参数 |
+|-----|------|------|
+| `read_project_file` | 读取文件内容 | `path`: 相对路径 |
+| `write_project_file` | 写入文件 | `path`, `content` |
+| `get_file_tree` | 获取文件树 | `path?`, `depth?`, `pattern?` |
+| `search_code` | 搜索代码 | `pattern`, `filePattern?`, `contextLines?` |
+
+### 安全限制
+
+**白名单路径** (允许访问):
+- `src/` - 源代码目录
+- `docs/` - 文档目录
+- `package.json`, `tsconfig*.json` - 配置文件
+- `.env.example` - 环境变量示例
+
+**黑名单模式** (禁止访问):
+- `node_modules/` - 依赖目录
+- `.git/` - Git 目录
+- `dist/`, `build/` - 构建产物
+- `*.log`, `.env` (非 example) - 敏感文件
+
+### 使用场景
+
+- 代码审查和重构建议
+- 添加新功能时参考现有代码结构
+- 批量修改配置文件
+- 项目结构分析
+
+**注意**: 项目操作需谨慎，修改前会显示 diff 确认
+
 ## 自定义域名
 
 为云函数配置自定义域名访问：

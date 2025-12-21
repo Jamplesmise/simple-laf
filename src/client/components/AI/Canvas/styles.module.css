@@ -1,0 +1,557 @@
+/**
+ * Canvas 分屏布局样式
+ */
+
+/* ============================================
+   分屏容器
+   ============================================ */
+
+.splitWrapper {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+.splitContainer {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.leftPane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: #fff;
+}
+
+.rightPane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--slate-50, #f8fafc);
+}
+
+/* ============================================
+   移动端堆叠布局
+   ============================================ */
+
+.mobileContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.mobileTabs {
+  display: flex;
+  border-bottom: 1px solid var(--slate-200, #e2e8f0);
+  background: var(--slate-50, #f8fafc);
+  flex-shrink: 0;
+}
+
+.mobileTab {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--slate-500, #64748b);
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+
+.mobileTab:hover {
+  color: var(--slate-700, #334155);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.mobileTabActive {
+  color: var(--emerald-600, #059669);
+}
+
+.mobileTabActive::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--emerald-600, #059669);
+}
+
+.mobileContent {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================
+   react-split Gutter 样式
+   ============================================ */
+
+:global(.gutter) {
+  background: var(--slate-200, #e2e8f0);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transition: background-color 0.15s ease;
+}
+
+:global(.gutter:hover) {
+  background-color: var(--emerald-500, #10b981);
+}
+
+:global(.gutter.gutter-horizontal) {
+  cursor: col-resize;
+}
+
+/* ============================================
+   代码面板
+   ============================================ */
+
+.codePaneHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--slate-200, #e2e8f0);
+  background: var(--slate-50, #f8fafc);
+  flex-shrink: 0;
+}
+
+.codePaneTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--slate-700, #334155);
+}
+
+.codePaneIcon {
+  color: var(--emerald-600, #059669);
+  font-size: 16px;
+}
+
+.versionSelect {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #fff;
+  border: 1px solid var(--slate-200, #e2e8f0);
+  font-size: 12px;
+  color: var(--slate-600, #475569);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.versionSelect:hover {
+  border-color: var(--emerald-500, #10b981);
+}
+
+.codePaneEditor {
+  flex: 1;
+  overflow: hidden;
+}
+
+.codePaneEmpty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--slate-400, #94a3b8);
+}
+
+.codePaneEmptyIcon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.codePaneEmptyText {
+  font-size: 14px;
+}
+
+/* ============================================
+   暗色模式
+   ============================================ */
+
+:global(.dark) .leftPane {
+  background: #1e293b;
+}
+
+:global(.dark) .rightPane {
+  background: #0f172a;
+}
+
+:global(.dark) :global(.gutter) {
+  background-color: #334155;
+}
+
+:global(.dark) :global(.gutter:hover) {
+  background-color: var(--emerald-500, #10b981);
+}
+
+:global(.dark) .codePaneHeader {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:global(.dark) .codePaneTitle {
+  color: #e2e8f0;
+}
+
+:global(.dark) .versionSelect {
+  background: #334155;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark) .versionSelect:hover {
+  border-color: var(--emerald-500, #10b981);
+}
+
+:global(.dark) .codePaneEmpty {
+  color: #64748b;
+}
+
+/* 移动端暗色模式 */
+:global(.dark) .mobileContainer {
+  background: #1e293b;
+}
+
+:global(.dark) .mobileTabs {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+:global(.dark) .mobileTab {
+  color: #64748b;
+}
+
+:global(.dark) .mobileTab:hover {
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+:global(.dark) .mobileTabActive {
+  color: var(--emerald-500, #10b981);
+}
+
+:global(.dark) .mobileTabActive::after {
+  background: var(--emerald-500, #10b981);
+}
+
+/* ============================================
+   代码面板操作区 (Sprint 11.2)
+   ============================================ */
+
+.codePaneActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.unsavedDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--amber-500, #f59e0b);
+  margin-left: 6px;
+}
+
+/* Diff 统计内联 */
+.diffStatsInline {
+  display: flex;
+  gap: 6px;
+  font-size: 12px;
+  font-family: monospace;
+  padding-right: 4px;
+}
+
+.diffStatAddedInline {
+  color: var(--emerald-600, #059669);
+}
+
+.diffStatRemovedInline {
+  color: var(--rose-600, #e11d48);
+}
+
+/* ============================================
+   版本历史下拉菜单
+   ============================================ */
+
+.versionDropdown {
+  width: 280px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.versionDropdownHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--slate-700, #334155);
+  border-bottom: 1px solid var(--slate-100, #f1f5f9);
+}
+
+.versionDropdownLoading {
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.versionDropdownEmpty {
+  padding: 16px;
+}
+
+.versionList {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.versionItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.versionItem:hover {
+  background: var(--slate-50, #f8fafc);
+}
+
+.versionItemActive {
+  background: var(--emerald-50, #ecfdf5);
+}
+
+.versionItemActive:hover {
+  background: var(--emerald-100, #d1fae5);
+}
+
+.versionItemMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.versionItemLabel {
+  font-size: 13px;
+  color: var(--slate-700, #334155);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.versionItemDesc {
+  color: var(--slate-500, #64748b);
+  font-weight: normal;
+}
+
+.versionItemTime {
+  font-size: 11px;
+  color: var(--slate-400, #94a3b8);
+}
+
+.versionItemActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.versionItemCheck {
+  color: var(--emerald-600, #059669);
+  font-size: 12px;
+}
+
+.versionItemAction {
+  padding: 4px;
+  border: none;
+  background: transparent;
+  color: var(--slate-400, #94a3b8);
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.versionItemAction:hover {
+  background: var(--slate-100, #f1f5f9);
+  color: var(--slate-600, #475569);
+}
+
+/* ============================================
+   Diff 视图
+   ============================================ */
+
+.diffViewContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.diffStats {
+  display: flex;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--slate-50, #f8fafc);
+  border-bottom: 1px solid var(--slate-200, #e2e8f0);
+  font-size: 12px;
+  font-family: monospace;
+}
+
+.diffStatAdded {
+  color: var(--emerald-600, #059669);
+}
+
+.diffStatRemoved {
+  color: var(--rose-600, #e11d48);
+}
+
+.diffStatModified {
+  color: var(--amber-600, #d97706);
+}
+
+.diffEditorWrapper {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ============================================
+   暗色模式 - Sprint 11.2
+   ============================================ */
+
+:global(.dark) .versionDropdown {
+  background: #1e293b;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .versionDropdownHeader {
+  color: #e2e8f0;
+  border-color: #334155;
+}
+
+:global(.dark) .versionItem:hover {
+  background: #334155;
+}
+
+:global(.dark) .versionItemActive {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+:global(.dark) .versionItemActive:hover {
+  background: rgba(16, 185, 129, 0.15);
+}
+
+:global(.dark) .versionItemLabel {
+  color: #e2e8f0;
+}
+
+:global(.dark) .versionItemDesc {
+  color: #94a3b8;
+}
+
+:global(.dark) .versionItemAction:hover {
+  background: #475569;
+  color: #e2e8f0;
+}
+
+:global(.dark) .diffStats {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+/* ============================================
+   快捷操作栏 (Sprint 11.3)
+   ============================================ */
+
+.quickActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--slate-50, #f8fafc);
+  border-top: 1px solid var(--slate-200, #e2e8f0);
+  flex-shrink: 0;
+}
+
+.quickActionButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--slate-200, #e2e8f0);
+  border-radius: 16px;
+  background: #fff;
+  color: var(--slate-700, #334155);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.quickActionButton:hover:not(:disabled) {
+  border-color: var(--emerald-500, #10b981);
+  background: var(--emerald-50, #ecfdf5);
+  color: var(--emerald-700, #047857);
+}
+
+.quickActionButton:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.quickActionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.quickActionIcon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.quickActionLabel {
+  font-weight: 500;
+}
+
+/* 暗色模式 - 快捷操作栏 */
+:global(.dark) .quickActions {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+:global(.dark) .quickActionButton {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+:global(.dark) .quickActionButton:hover:not(:disabled) {
+  border-color: var(--emerald-500, #10b981);
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--emerald-400, #34d399);
+}

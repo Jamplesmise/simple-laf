@@ -3,18 +3,27 @@
  *
  * 渲染代码块、操作卡片、思考过程等
  * 支持类似 Claude Artifacts 的可展开代码预览
+ *
+ * 改进：
+ * - 画布风格代码展示
+ * - 明确的文件名标注
+ * - 可展开详细内容
+ * - 流式输出正确换行
+ * - 便捷复制选项
  */
 
 import { useState } from 'react'
-import { Typography, Tooltip } from 'antd'
+import { Typography, Tooltip, message } from 'antd'
 import {
   CopyOutlined, CheckOutlined, FileAddOutlined, FolderAddOutlined,
   EditFilled, DeleteFilled, BulbOutlined, DownOutlined, RightOutlined,
   SwapOutlined, BugOutlined, QuestionCircleOutlined,
-  SplitCellsOutlined, MergeCellsOutlined, ToolOutlined
+  SplitCellsOutlined, MergeCellsOutlined, ToolOutlined, EyeOutlined,
+  FileOutlined, CodeOutlined
 } from '@ant-design/icons'
 import { useThemeColors } from '@/hooks/useTheme'
 import { parseAIResponse, codeFont, type AIOperation } from './utils'
+import { HTMLPreview, ReactPreview, MermaidPreview, SVGPreview } from '../AI/Artifacts'
 import styles from './styles.module.css'
 
 const { Paragraph } = Typography
@@ -80,7 +89,7 @@ function ThinkingBlock({ content }: { content: string }) {
 }
 
 /**
- * 操作卡片 - 类似 Claude Artifacts 的可展开预览
+ * 操作卡片 - 画布风格可展开预览
  */
 function OperationCard({ operation }: { operation: AIOperation }) {
   const [expanded, setExpanded] = useState(false)
@@ -96,19 +105,19 @@ function OperationCard({ operation }: { operation: AIOperation }) {
   }> = {
     create: {
       icon: <FileAddOutlined />,
-      label: '创建函数',
+      label: '创建',
       colorClass: styles.operationIconCreate,
       color: '#22C55E',
     },
     update: {
       icon: <EditFilled />,
-      label: '修改函数',
+      label: '修改',
       colorClass: styles.operationIconUpdate,
       color: '#3B82F6',
     },
     delete: {
       icon: <DeleteFilled />,
-      label: '删除函数',
+      label: '删除',
       colorClass: styles.operationIconDelete,
       color: '#EF4444',
     },
@@ -120,31 +129,31 @@ function OperationCard({ operation }: { operation: AIOperation }) {
     },
     folder: {
       icon: <FolderAddOutlined />,
-      label: '创建文件夹',
+      label: '文件夹',
       colorClass: styles.operationIconCreate,
       color: '#F59E0B',
     },
     debug: {
       icon: <BugOutlined />,
-      label: '调试分析',
+      label: '调试',
       colorClass: styles.operationIconDebug,
       color: '#EC4899',
     },
     explain: {
       icon: <QuestionCircleOutlined />,
-      label: '代码解释',
+      label: '解释',
       colorClass: styles.operationIconExplain,
       color: '#06B6D4',
     },
     refactor: {
       icon: <SplitCellsOutlined />,
-      label: '重构建议',
+      label: '重构',
       colorClass: styles.operationIconRefactor,
       color: '#8B5CF6',
     },
     merge: {
       icon: <MergeCellsOutlined />,
-      label: '合并分析',
+      label: '合并',
       colorClass: styles.operationIconMerge,
       color: '#F97316',
     },
@@ -159,6 +168,9 @@ function OperationCard({ operation }: { operation: AIOperation }) {
 
   const hasCode = !!operation.code
 
+  // 获取文件名/函数名
+  const fileName = operation.name || (operation.functionId ? `函数 ${operation.functionId.slice(-6)}` : null)
+
   // 代码预览（前5行）
   const getCodePreview = () => {
     if (!operation.code) return ''
@@ -167,11 +179,18 @@ function OperationCard({ operation }: { operation: AIOperation }) {
     return lines.length > 5 ? preview + '\n...' : preview
   }
 
+  // 统计代码行数
+  const getLineCount = () => {
+    if (!operation.code) return 0
+    return operation.code.split('\n').length
+  }
+
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation()
     if (operation.code) {
       await navigator.clipboard.writeText(operation.code)
       setCopied(true)
+      message.success('已复制到剪贴板')
       setTimeout(() => setCopied(false), 2000)
     }
   }
@@ -190,38 +209,78 @@ function OperationCard({ operation }: { operation: AIOperation }) {
         '--artifact-color': config.color,
       } as React.CSSProperties}
     >
-      {/* 卡片头部 */}
-      <div className={styles.artifactHeader} onClick={handleToggle}>
+      {/* 卡片头部 - 画布风格 */}
+      <div
+        className={styles.artifactHeader}
+        onClick={handleToggle}
+        style={{ background: isDark ? '#1a1a2e' : '#f8fafc' }}
+      >
+        {/* 文件图标 */}
         <div
           className={styles.artifactIcon}
           style={{ background: `${config.color}15`, color: config.color }}
         >
-          {config.icon}
+          {hasCode ? <CodeOutlined /> : config.icon}
         </div>
+
+        {/* 文件信息 */}
         <div className={styles.artifactInfo}>
           <div className={styles.artifactTitle}>
-            <span className={styles.artifactLabel} style={{ color: config.color }}>
+            {/* 文件名 */}
+            {fileName && (
+              <span className={styles.artifactName} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <FileOutlined style={{ fontSize: 12, opacity: 0.6 }} />
+                {fileName}
+              </span>
+            )}
+            {/* 操作标签 */}
+            <span
+              className={styles.artifactLabel}
+              style={{
+                color: config.color,
+                background: `${config.color}15`,
+                padding: '2px 8px',
+                borderRadius: 4,
+                fontSize: 11,
+              }}
+            >
               {config.label}
             </span>
-            {operation.name && (
-              <span className={styles.artifactName}>{operation.name}</span>
-            )}
           </div>
           {operation.description && (
             <div className={styles.artifactDesc}>{operation.description}</div>
           )}
+          {hasCode && (
+            <div style={{ fontSize: 11, color: t.textSecondary, marginTop: 4 }}>
+              {getLineCount()} 行代码
+            </div>
+          )}
         </div>
+
+        {/* 操作按钮 */}
         <div className={styles.artifactActions}>
           {hasCode && (
             <>
               <Tooltip title={copied ? '已复制' : '复制代码'}>
-                <button className={styles.artifactAction} onClick={handleCopy}>
+                <button
+                  className={styles.artifactAction}
+                  onClick={handleCopy}
+                  style={{
+                    background: copied ? `${config.color}20` : undefined,
+                    color: copied ? config.color : undefined,
+                  }}
+                >
                   {copied ? <CheckOutlined /> : <CopyOutlined />}
                 </button>
               </Tooltip>
-              <span className={styles.artifactExpand}>
-                {expanded ? <DownOutlined /> : <RightOutlined />}
-              </span>
+              <Tooltip title={expanded ? '收起' : '展开'}>
+                <button
+                  className={styles.artifactAction}
+                  onClick={(e) => { e.stopPropagation(); handleToggle() }}
+                >
+                  {expanded ? <DownOutlined /> : <RightOutlined />}
+                </button>
+              </Tooltip>
             </>
           )}
         </div>
@@ -232,12 +291,15 @@ function OperationCard({ operation }: { operation: AIOperation }) {
         <div
           className={styles.artifactPreview}
           onClick={handleToggle}
-          style={{ background: isDark ? '#1a1a1a' : '#f5f5f5' }}
+          style={{ background: isDark ? '#0d1117' : '#f6f8fa' }}
         >
-          <pre style={{ fontFamily: codeFont }}>
+          <pre style={{ fontFamily: codeFont, margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
             <code>{getCodePreview()}</code>
           </pre>
-          <div className={styles.artifactPreviewFade} />
+          <div
+            className={styles.artifactPreviewFade}
+            style={{ background: isDark ? 'linear-gradient(to bottom, transparent, #0d1117)' : undefined }}
+          />
         </div>
       )}
 
@@ -245,9 +307,9 @@ function OperationCard({ operation }: { operation: AIOperation }) {
       {hasCode && expanded && (
         <div
           className={styles.artifactCode}
-          style={{ background: isDark ? '#1e1e1e' : '#fafafa' }}
+          style={{ background: isDark ? '#0d1117' : '#f6f8fa' }}
         >
-          <pre style={{ fontFamily: codeFont }}>
+          <pre style={{ fontFamily: codeFont, margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
             <code>{operation.code}</code>
           </pre>
         </div>
@@ -272,10 +334,19 @@ function TextContent({ content, messageId }: { content: string; messageId: strin
               key={`${messageId}-code-${idx}`}
               code={part.content}
               language={part.language}
+              fileName={part.fileName}
             />
           )
         }
-        return <span key={`${messageId}-text-${idx}`}>{part.content}</span>
+        // 文本内容保留换行
+        return (
+          <span
+            key={`${messageId}-text-${idx}`}
+            style={{ whiteSpace: 'pre-wrap' }}
+          >
+            {part.content}
+          </span>
+        )
       })}
     </div>
   )
@@ -285,11 +356,13 @@ interface TextPart {
   type: 'text' | 'code'
   content: string
   language?: string
+  fileName?: string
 }
 
 function parseCodeBlocks(content: string): TextPart[] {
   const parts: TextPart[] = []
-  const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g
+  // 支持 ```language:filename 格式提取文件名
+  const codeBlockRegex = /```(\w*)(?::([^\n]+))?\n([\s\S]*?)```/g
   let lastIndex = 0
   let match
 
@@ -306,7 +379,8 @@ function parseCodeBlocks(content: string): TextPart[] {
     parts.push({
       type: 'code',
       language: match[1] || 'plaintext',
-      content: match[2]
+      fileName: match[2]?.trim(),
+      content: match[3]
     })
 
     lastIndex = match.index + match[0].length
@@ -324,33 +398,116 @@ function parseCodeBlocks(content: string): TextPart[] {
 }
 
 /**
- * 代码块
+ * 代码块 - 画布风格
  */
-function CodeBlock({ code, language }: { code: string; language?: string }) {
+function CodeBlock({ code, language, fileName }: { code: string; language?: string; fileName?: string }) {
   const [copied, setCopied] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
   const { isDark, t } = useThemeColors()
+
+  // 判断是否为可预览的代码
+  const lang = language?.toLowerCase()
+  const isHTMLPreviewable = lang === 'html'
+  const isReactPreviewable = lang === 'jsx' || lang === 'tsx' || lang === 'react'
+  const isMermaidPreviewable = lang === 'mermaid'
+  const isSVGPreviewable = lang === 'svg'
+  const isPreviewable = isHTMLPreviewable || isReactPreviewable || isMermaidPreviewable || isSVGPreviewable
+
+  // 统计行数
+  const lineCount = code.split('\n').length
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(code)
     setCopied(true)
+    message.success('已复制到剪贴板')
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const togglePreview = () => {
+    setShowPreview(!showPreview)
+  }
+
+  // 根据语言类型选择预览组件
+  const renderPreviewComponent = () => {
+    if (isHTMLPreviewable) {
+      return <HTMLPreview html={code} height={350} />
+    }
+    if (isReactPreviewable) {
+      return <ReactPreview code={code} height={350} />
+    }
+    if (isMermaidPreviewable) {
+      return <MermaidPreview code={code} height={350} />
+    }
+    if (isSVGPreviewable) {
+      return <SVGPreview svg={code} height={350} />
+    }
+    return null
+  }
+
+  // 如果正在预览，根据类型显示对应的预览组件
+  if (showPreview && isPreviewable) {
+    return (
+      <div className={styles.codeBlockWithPreview}>
+        {renderPreviewComponent()}
+        <div className={styles.previewToggleBar} style={{ background: t.bgMuted, borderColor: t.border }}>
+          <button className={styles.copyButton} onClick={handleCopy}>
+            {copied ? <CheckOutlined /> : <CopyOutlined />}
+            {copied ? '已复制' : '复制'}
+          </button>
+          <button className={styles.copyButton} onClick={togglePreview}>
+            <CodeOutlined />
+            查看代码
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className={styles.codeBlock} style={{ borderColor: t.border }}>
-      <div className={styles.codeHeader} style={{ background: t.bgMuted, borderColor: t.border }}>
-        <span className={styles.codeLanguage}>{language}</span>
-        <button className={styles.copyButton} onClick={handleCopy}>
-          {copied ? <CheckOutlined /> : <CopyOutlined />}
-          {copied ? '已复制' : '复制'}
-        </button>
+      {/* 头部 - 显示语言和文件名 */}
+      <div className={styles.codeHeader} style={{ background: isDark ? '#161b22' : '#f6f8fa', borderColor: t.border }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {fileName && (
+            <>
+              <FileOutlined style={{ fontSize: 12, color: t.textSecondary }} />
+              <span style={{ fontSize: 13, fontWeight: 500, color: t.text }}>{fileName}</span>
+              <span style={{ color: t.textSecondary }}>·</span>
+            </>
+          )}
+          <span className={styles.codeLanguage}>{language}</span>
+          <span style={{ fontSize: 11, color: t.textSecondary }}>
+            {lineCount} 行
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            className={styles.copyButton}
+            onClick={handleCopy}
+            style={{
+              background: copied ? 'rgba(34, 197, 94, 0.1)' : undefined,
+              color: copied ? '#22C55E' : undefined,
+            }}
+          >
+            {copied ? <CheckOutlined /> : <CopyOutlined />}
+            {copied ? '已复制' : '复制'}
+          </button>
+          {isPreviewable && (
+            <button className={styles.copyButton} onClick={togglePreview}>
+              <EyeOutlined />
+              预览
+            </button>
+          )}
+        </div>
       </div>
       <pre
         className={styles.codeContent}
         style={{
-          background: isDark ? '#1e1e1e' : '#fafafa',
+          background: isDark ? '#0d1117' : '#f6f8fa',
           color: t.text,
           fontFamily: codeFont,
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
         }}
       >
         <code>{code}</code>

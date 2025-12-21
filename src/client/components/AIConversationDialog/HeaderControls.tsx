@@ -14,6 +14,8 @@ import {
   FileTextOutlined,
   DownOutlined,
   CheckOutlined,
+  SplitCellsOutlined,
+  ExportOutlined,
 } from '@ant-design/icons'
 import type { AIProvider, AIModel } from '@/api/aiProvider'
 import type { AISystemPrompt } from '@/api/aiSystemPrompt'
@@ -41,6 +43,13 @@ interface HeaderControlsProps {
   onPromptChange: (id: string | null) => void
   // 关闭
   onClose: () => void
+  // Canvas 模式
+  canvasMode?: boolean
+  onCanvasModeToggle?: () => void
+  canvasDisabled?: boolean
+  // 导出
+  onExport?: () => void
+  exportDisabled?: boolean
 }
 
 export function HeaderControls({
@@ -56,6 +65,11 @@ export function HeaderControls({
   systemPrompts,
   selectedPromptId,
   onPromptChange,
+  canvasMode,
+  onCanvasModeToggle,
+  canvasDisabled,
+  onExport,
+  exportDisabled,
 }: HeaderControlsProps) {
   const [providerOpen, setProviderOpen] = useState(false)
   const [modelOpen, setModelOpen] = useState(false)
@@ -183,6 +197,31 @@ export function HeaderControls({
           <DownOutlined className={styles.selectorPillChevron} />
         </button>
       </Dropdown>
+
+      {/* 分隔线 */}
+      <div className={styles.headerDivider} />
+
+      {/* Canvas 模式开关 */}
+      <button
+        className={`${styles.selectorPill} ${canvasMode ? styles.selectorPillActive : ''}`}
+        onClick={onCanvasModeToggle}
+        disabled={canvasDisabled}
+        title={canvasDisabled ? '请先选择一个函数' : 'Canvas 分屏模式'}
+      >
+        <SplitCellsOutlined className={styles.selectorPillIcon} />
+        <span>Canvas</span>
+      </button>
+
+      {/* 导出按钮 */}
+      <button
+        className={styles.selectorPill}
+        onClick={onExport}
+        disabled={exportDisabled}
+        title={exportDisabled ? '请先选择一个对话' : '导出对话'}
+      >
+        <ExportOutlined className={styles.selectorPillIcon} />
+        <span>导出</span>
+      </button>
     </div>
   )
 }

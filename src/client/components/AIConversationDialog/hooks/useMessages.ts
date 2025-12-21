@@ -8,6 +8,7 @@ import { useState, useCallback, useRef } from 'react'
 import { message } from 'antd'
 import { aiConversationApi, type AIMessage, type ChatMessage } from '@/api/aiConversation'
 import { useFunctionStore, type CloudFunction } from '@/stores/function'
+import type { StatusPanelData, ToolCallRecord } from '@/components/AI/StatusPanel/types'
 
 export interface UseMessagesOptions {
   onConversationCreated?: (id: string) => void
@@ -22,6 +23,8 @@ export interface UseMessagesReturn {
   // 流式输出
   streamContent: string
   streamStatus: string
+  // Sprint 10.1: 状态面板数据
+  statusPanelData: StatusPanelData
   // 操作
   loadMessages: (conversationId: string) => Promise<void>
   sendMessage: (params: SendMessageParams) => Promise<void>
@@ -45,6 +48,12 @@ export interface SendMessageParams {
   }
 }
 
+// 初始状态面板数据
+const initialStatusPanelData: StatusPanelData = {
+  status: 'idle',
+  toolCalls: [],
+}
+
 export function useMessages(options: UseMessagesOptions = {}): UseMessagesReturn {
   const { onConversationCreated, onMessageSent } = options
   const { refreshList } = useFunctionStore()
@@ -56,8 +65,14 @@ export function useMessages(options: UseMessagesOptions = {}): UseMessagesReturn
   const [streamContent, setStreamContent] = useState('')
   const [streamStatus, setStreamStatus] = useState('')
 
+  // Sprint 10.1: 状态面板数据
+  const [statusPanelData, setStatusPanelData] = useState<StatusPanelData>(initialStatusPanelData)
+
   // 流式输出引用
   const streamRef = useRef({ content: '', status: '' })
+
+  // Sprint 10.1: 状态面板引用
+  const statusRef = useRef<StatusPanelData>({ ...initialStatusPanelData })
 
   // 加载消息
   const loadMessages = useCallback(async (conversationId: string) => {
@@ -79,21 +94,37 @@ export function useMessages(options: UseMessagesOptions = {}): UseMessagesReturn
     setStreamStatus('')
   }, [])
 
+  // 更新状态面板数据的辅助函数
+  const updateStatusPanel = useCallback((updates: Partial<StatusPanelData>) => {
+    statusRef.current = { ...statusRef.current, ...updates }
+    setStatusPanelData({ ...statusRef.current })
+  }, [])
+
   // 处理流式消息
   const handleStreamMessage = useCallback((msg: ChatMessage) => {
     switch (msg.status) {
       case 'user_message':
+        updateStatusPanel({ status: 'thinking', statusMessage: '消息已发送' })
         break
+
       case 'thinking':
         streamRef.current.status = '🤔 正在思考...'
         setStreamStatus('🤔 正在思考...')
+        updateStatusPanel({
+          status: 'thinking',
+          statusMessage: msg.message || 'AI 正在分析...',
+          thinkingContent: msg.content,
+        })
         break
+
       case 'generating':
         streamRef.current.content += msg.content || ''
         setStreamContent(streamRef.current.content)
         streamRef.current.status = ''
         setStreamStatus('')
+        updateStatusPanel({ status: 'generating', statusMessage: '生成回复中...' })
         break
+
       case 'plan':
         // 显示具体要执行的操作
         if (msg.plan?.operations?.length) {
@@ -118,22 +149,74 @@ export function useMessages(options: UseMessagesOptions = {}): UseMessagesReturn
           streamRef.current.status = '🎯 分析执行计划...'
           setStreamStatus('🎯 分析执行计划...')
         }
+        updateStatusPanel({
+          status: 'executing',
+          statusMessage: '准备执行操作...',
+          thinkingContent: msg.plan?.thinking,
+        })
         break
+
       case 'executing':
         streamRef.current.status = '⚙️ 执行操作中...'
         setStreamStatus('⚙️ 执行操作中...')
+        updateStatusPanel({ status: 'executing', statusMessage: '执行操作中...' })
         break
+
+      // Sprint 10.1: 新增工具调用事件
+      case 'tool_call':
+        if (msg.toolCall) {
+          const newToolCall: ToolCallRecord = {
+            callId: msg.toolCall.callId,
+            tool: msg.toolCall.tool,
+            params: msg.toolCall.params,
+            status: 'running',
+            startTime: Date.now(),
+          }
+          const updatedCalls = [...statusRef.current.toolCalls, newToolCall]
+          updateStatusPanel({ toolCalls: updatedCalls })
+        }
+        break
+
+      // Sprint 10.1: 新增工具结果事件
+      case 'tool_result':
+        if (msg.toolResult) {
+          const updatedCalls = statusRef.current.toolCalls.map(tc => {
+            if (tc.callId === msg.toolResult!.callId) {
+              return {
+                ...tc,
+                status: msg.toolResult!.success ? 'success' as const : 'error' as const,
+                result: msg.toolResult!.result,
+                duration: msg.toolResult!.duration,
+                endTime: Date.now(),
+              }
+            }
+            return tc
+          })
+          updateStatusPanel({ toolCalls: updatedCalls })
+        }
+        break
+
+      // Sprint 10.1: 新增 Token 使用事件
+      case 'token_usage':
+        if (msg.tokenUsage) {
+          updateStatusPanel({ tokenUsage: msg.tokenUsage })
+        }
+        break
+
       case 'done':
         streamRef.current.status = ''
         setStreamStatus('')
+        updateStatusPanel({ status: 'done', statusMessage: '完成', endTime: Date.now() })
         break
+
       case 'error':
         streamRef.current.status = ''
         setStreamStatus('')
         message.error(msg.error || 'AI 处理出错')
+        updateStatusPanel({ status: 'error', statusMessage: msg.error || 'AI 处理出错' })
         break
     }
-  }, [])
+  }, [updateStatusPanel])
 
   // 发送消息
   const sendMessage = useCallback(async (params: SendMessageParams) => {
@@ -171,6 +254,10 @@ export function useMessages(options: UseMessagesOptions = {}): UseMessagesReturn
     setSending(true)
     setStreamContent('')
     setStreamStatus('thinking')
+
+    // Sprint 10.1: 重置状态面板
+    statusRef.current = { ...initialStatusPanelData, status: 'thinking', startTime: Date.now() }
+    setStatusPanelData({ ...statusRef.current })
 
     try {
       const generator = aiConversationApi.chat(conversationId, userMessage, {
@@ -212,6 +299,8 @@ export function useMessages(options: UseMessagesOptions = {}): UseMessagesReturn
     sending,
     streamContent,
     streamStatus,
+    // Sprint 10.1: 状态面板数据
+    statusPanelData,
     loadMessages,
     sendMessage,
     clearMessages,

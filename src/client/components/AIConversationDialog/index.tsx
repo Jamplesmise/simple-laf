@@ -27,13 +27,33 @@ import { ConversationSidebar } from './ConversationSidebar'
 import { MessagePanel } from './MessagePanel'
 import { InputArea } from './InputArea'
 import { HeaderControls } from './HeaderControls'
+import { ContextManager } from '../AI/ContextManager'
+import { CanvasLayout } from '../AI/Canvas'
+import { ExportDialog } from '../AI/Export'
 
 // 样式
 import styles from './styles.module.css'
 
+// AI 助手模式
+export type AIAssistantMode = 'function' | 'site'
+
+// 站点文件信息
+export interface SiteFile {
+  path: string
+  mimeType?: string
+  isDirectory?: boolean
+}
+
 export interface AIConversationDialogProps {
   open: boolean
   onClose: () => void
+  // 场景模式：function(云函数) 或 site(站点)
+  mode?: AIAssistantMode
+  // 站点上下文（mode='site' 时使用）
+  siteContext?: {
+    files: SiteFile[]
+    onContentChange?: () => void
+  }
   initialContext?: {
     selectedCode?: string
     functionId?: string
@@ -43,6 +63,8 @@ export interface AIConversationDialogProps {
 export function AIConversationDialog({
   open,
   onClose,
+  mode = 'function',
+  siteContext,
   initialContext,
 }: AIConversationDialogProps) {
   useThemeColors() // for theme consistency
@@ -102,6 +124,8 @@ export function AIConversationDialog({
     sending,
     streamContent,
     streamStatus,
+    // Sprint 10.1: 状态面板数据
+    statusPanelData,
     loadMessages,
     sendMessage,
     clearMessages,
@@ -116,6 +140,12 @@ export function AIConversationDialog({
   // 输入状态
   const [inputValue, setInputValue] = useState('')
   const [selectedFunctions, setSelectedFunctions] = useState<string[]>([])
+
+  // Canvas 模式
+  const [canvasMode, setCanvasMode] = useState(false)
+
+  // 导出对话框
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   // 日志分析模式
   const [enableLogAnalysis, setEnableLogAnalysis] = useState(false)
@@ -144,11 +174,14 @@ export function AIConversationDialog({
   useEffect(() => {
     if (open) {
       reloadConversations()
-      loadFoldersAndFunctions()
+      // 站点模式不需要加载函数列表
+      if (mode !== 'site') {
+        loadFoldersAndFunctions()
+      }
       reloadPrompts()
       reloadProviders()
     }
-  }, [open, reloadConversations, loadFoldersAndFunctions, reloadPrompts, reloadProviders])
+  }, [open, mode, reloadConversations, loadFoldersAndFunctions, reloadPrompts, reloadProviders])
 
   // 处理初始上下文（如从右键菜单打开时自动选中函数）
   useEffect(() => {
@@ -172,6 +205,16 @@ export function AIConversationDialog({
   // 获取当前对话
   const currentConversation = conversationList.find(c => c._id === currentId)
 
+  // 构建站点上下文字符串
+  const buildSiteContextString = useCallback(() => {
+    if (!siteContext?.files?.length) return ''
+    const fileList = siteContext.files
+      .filter(f => !f.isDirectory)
+      .map(f => `- ${f.path} (${f.mimeType || 'unknown'})`)
+      .join('\n')
+    return `[站点模式]\n当前站点文件列表:\n${fileList || '(空)'}\n\n`
+  }, [siteContext?.files])
+
   // 处理发送消息
   const handleSend = useCallback(async () => {
     if (!inputValue.trim() && selectedFunctions.length === 0) return
@@ -185,6 +228,11 @@ export function AIConversationDialog({
     const shouldAnalyzeLog = enableLogAnalysis
     const currentLogDays = logDays
 
+    // 站点模式：添加站点上下文前缀
+    const messageContent = mode === 'site'
+      ? buildSiteContextString() + inputValue
+      : inputValue
+
     // 清空输入
     setInputValue('')
     setSelectedFunctions([])
@@ -192,7 +240,7 @@ export function AIConversationDialog({
 
     await sendMessage({
       conversationId: currentId,
-      content: inputValue,
+      content: messageContent,
       selectedFunctions: selectedFunctionObjects,
       options: {
         systemPromptId: selectedPromptId || undefined,
@@ -201,8 +249,15 @@ export function AIConversationDialog({
         analyzeLog: shouldAnalyzeLog,
         logDays: shouldAnalyzeLog ? currentLogDays : undefined,
         initialContext,
+        siteMode: mode === 'site',
       },
     })
+
+    // 站点模式：操作完成后刷新预览
+    if (mode === 'site' && siteContext?.onContentChange) {
+      // 延迟一下让后端操作完成
+      setTimeout(() => siteContext.onContentChange?.(), 1000)
+    }
   }, [
     inputValue,
     selectedFunctions,
@@ -216,6 +271,9 @@ export function AIConversationDialog({
     logDays,
     initialContext,
     sendMessage,
+    mode,
+    buildSiteContextString,
+    siteContext,
   ])
 
   // 处理新建对话
@@ -249,6 +307,36 @@ export function AIConversationDialog({
   const handleLogAnalysisRemove = useCallback(() => {
     setEnableLogAnalysis(false)
   }, [])
+
+  // 处理快捷操作 (Sprint 11.3)
+  const handleQuickAction = useCallback(async (prompt: string) => {
+    // 获取当前选中的函数对象
+    const selectedFunctionObjects = selectedFunctions
+      .map(id => allFunctions.find(f => f._id === id))
+      .filter((f): f is CloudFunction => f !== undefined)
+
+    await sendMessage({
+      conversationId: currentId,
+      content: prompt,
+      selectedFunctions: selectedFunctionObjects,
+      options: {
+        systemPromptId: selectedPromptId || undefined,
+        modelId: selectedModelId || undefined,
+        enableThinking: enableThinking && selectedModel?.supportsThinking,
+        initialContext,
+      },
+    })
+  }, [
+    selectedFunctions,
+    allFunctions,
+    currentId,
+    selectedPromptId,
+    selectedModelId,
+    enableThinking,
+    selectedModel,
+    initialContext,
+    sendMessage,
+  ])
 
   return (
     <Modal
@@ -314,6 +402,17 @@ export function AIConversationDialog({
                 loadingPrompts={loadingPrompts}
                 onPromptChange={selectPrompt}
                 onClose={onClose}
+                canvasMode={canvasMode}
+                onCanvasModeToggle={() => setCanvasMode(!canvasMode)}
+                canvasDisabled={false}
+                onExport={() => setExportDialogOpen(true)}
+                exportDisabled={!currentId}
+              />
+              {/* Sprint 10.3: 上下文管理 */}
+              <ContextManager
+                conversationId={currentId}
+                modelName={selectedModel?.name}
+                compact
               />
             </div>
             <button className={styles.closeButton} onClick={onClose}>
@@ -321,33 +420,83 @@ export function AIConversationDialog({
             </button>
           </div>
 
-          {/* 消息面板 */}
-          <MessagePanel
-            messages={messages}
-            loading={loadingMessages}
-            streamContent={streamContent}
-            streamStatus={streamStatus}
-            currentTitle={currentConversation?.title}
-          />
+          {/* 内容区域：普通模式 / Canvas 模式 */}
+          {canvasMode ? (
+            <CanvasLayout
+              leftPanel={
+                <>
+                  <MessagePanel
+                    messages={messages}
+                    loading={loadingMessages}
+                    streamContent={streamContent}
+                    streamStatus={streamStatus}
+                    currentTitle={currentConversation?.title}
+                    statusPanelData={statusPanelData}
+                  />
+                  <InputArea
+                    value={inputValue}
+                    sending={sending}
+                    selectedFunctions={selectedFunctions}
+                    allFunctions={allFunctions}
+                    folders={folders}
+                    enableLogAnalysis={enableLogAnalysis}
+                    logDays={logDays}
+                    mode={mode}
+                    onValueChange={setInputValue}
+                    onSend={handleSend}
+                    onFunctionSelect={handleFunctionSelect}
+                    onFunctionRemove={handleFunctionRemove}
+                    onLogAnalysisSelect={handleLogAnalysisSelect}
+                    onLogAnalysisRemove={handleLogAnalysisRemove}
+                  />
+                </>
+              }
+              functionId={selectedFunctions[0]}
+              conversationId={currentId || undefined}
+              onQuickAction={handleQuickAction}
+              sending={sending}
+            />
+          ) : (
+            <>
+              {/* 消息面板 */}
+              <MessagePanel
+                messages={messages}
+                loading={loadingMessages}
+                streamContent={streamContent}
+                streamStatus={streamStatus}
+                currentTitle={currentConversation?.title}
+                statusPanelData={statusPanelData}
+              />
 
-          {/* 输入区域 */}
-          <InputArea
-            value={inputValue}
-            sending={sending}
-            selectedFunctions={selectedFunctions}
-            allFunctions={allFunctions}
-            folders={folders}
-            enableLogAnalysis={enableLogAnalysis}
-            logDays={logDays}
-            onValueChange={setInputValue}
-            onSend={handleSend}
-            onFunctionSelect={handleFunctionSelect}
-            onFunctionRemove={handleFunctionRemove}
-            onLogAnalysisSelect={handleLogAnalysisSelect}
-            onLogAnalysisRemove={handleLogAnalysisRemove}
-          />
+              {/* 输入区域 */}
+              <InputArea
+                value={inputValue}
+                sending={sending}
+                selectedFunctions={selectedFunctions}
+                allFunctions={allFunctions}
+                folders={folders}
+                enableLogAnalysis={enableLogAnalysis}
+                logDays={logDays}
+                mode={mode}
+                onValueChange={setInputValue}
+                onSend={handleSend}
+                onFunctionSelect={handleFunctionSelect}
+                onFunctionRemove={handleFunctionRemove}
+                onLogAnalysisSelect={handleLogAnalysisSelect}
+                onLogAnalysisRemove={handleLogAnalysisRemove}
+              />
+            </>
+          )}
         </div>
       </div>
+
+      {/* 导出对话框 */}
+      <ExportDialog
+        open={exportDialogOpen}
+        onClose={() => setExportDialogOpen(false)}
+        conversationId={currentId || ''}
+        conversationTitle={currentConversation?.title}
+      />
     </Modal>
   )
 }

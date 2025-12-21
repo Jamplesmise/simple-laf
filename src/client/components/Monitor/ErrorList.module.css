@@ -1,0 +1,43 @@
+.errorList {
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+}
+
+.chartCard {
+  margin-top: 16px;
+}
+
+.tableCard {
+  margin-top: 16px;
+}
+
+.expandedRow {
+  padding: 8px 0;
+}
+
+.errorSample {
+  margin-top: 8px;
+  background: #f5f5f5;
+  padding: 8px;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow: auto;
+}

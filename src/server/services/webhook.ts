@@ -5,6 +5,7 @@ import { executeFunction, type ExecuteResult } from '../engine/executor.js'
 import { createCloudWithEnv } from '../cloud/index.js'
 import * as functionService from './function.js'
 import * as executionLogService from './executionLog.js'
+import { emitExecutionEvent } from '../middleware/monitor.js'
 
 export interface Webhook {
   _id?: ObjectId
@@ -251,6 +252,17 @@ export async function execute(
       duration,
     }).catch(err => console.error('记录执行日志失败:', err))
 
+    // 广播执行事件
+    emitExecutionEvent({
+      userId: webhook.userId,
+      functionId: webhook.functionId,
+      functionName: webhook.functionName,
+      trigger: 'webhook',
+      success: !result.error,
+      duration,
+      error: result.error,
+    })
+
     // 更新 webhook 统计
     await db.collection<Webhook>('webhooks').updateOne(
       { _id: webhook._id },
@@ -281,6 +293,17 @@ export async function execute(
       logs: [],
       duration,
     }).catch(err => console.error('记录执行日志失败:', err))
+
+    // 广播执行事件
+    emitExecutionEvent({
+      userId: webhook.userId,
+      functionId: webhook.functionId,
+      functionName: webhook.functionName,
+      trigger: 'webhook',
+      success: false,
+      duration,
+      error: errorMessage,
+    })
 
     return {
       data: null,

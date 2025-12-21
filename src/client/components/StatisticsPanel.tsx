@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
-import { Spin, Empty, Progress, Tooltip } from 'antd'
+import { Spin, Empty, Progress, Tooltip, Tabs } from 'antd'
 import {
   CheckCircleOutlined, CloseCircleOutlined, ThunderboltOutlined,
   ClockCircleOutlined, PlayCircleOutlined, CloudOutlined,
   ScheduleOutlined, ApiOutlined, FireOutlined,
+  DashboardOutlined, WarningOutlined,
 } from '@ant-design/icons'
 import { useThemeStore } from '../stores/theme'
 import { executionLogsApi, type OverallStats, type ExecutionTrend } from '../api/executionLogs'
+import { Dashboard as MonitorDashboard, ErrorList } from './Monitor'
 
 export default function StatisticsPanel() {
   const mode = useThemeStore((state) => state.mode)
@@ -98,26 +100,28 @@ export default function StatisticsPanel() {
     )
   }
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-        <Spin />
-      </div>
-    )
-  }
+  // 概览内容
+  const OverviewContent = () => {
+    if (loading) {
+      return (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300 }}>
+          <Spin />
+        </div>
+      )
+    }
 
-  if (!stats || stats.totalExecutions === 0) {
-    return (
-      <Empty
-        image={Empty.PRESENTED_IMAGE_SIMPLE}
-        description="暂无统计数据"
-        style={{ padding: 40 }}
-      />
-    )
-  }
+    if (!stats || stats.totalExecutions === 0) {
+      return (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description="暂无统计数据"
+          style={{ padding: 40 }}
+        />
+      )
+    }
 
-  return (
-    <div style={{ height: '100%', overflow: 'auto', padding: 16 }}>
+    return (
+      <div style={{ padding: 16 }}>
       {/* 概览卡片 */}
       <div style={{
         display: 'grid',
@@ -367,6 +371,51 @@ export default function StatisticsPanel() {
           </div>
         </div>
       )}
+    </div>
+    )
+  }
+
+  const tabItems = [
+    {
+      key: 'overview',
+      label: (
+        <span>
+          <ThunderboltOutlined />
+          概览
+        </span>
+      ),
+      children: <OverviewContent />,
+    },
+    {
+      key: 'realtime',
+      label: (
+        <span>
+          <DashboardOutlined />
+          实时监控
+        </span>
+      ),
+      children: <MonitorDashboard />,
+    },
+    {
+      key: 'errors',
+      label: (
+        <span>
+          <WarningOutlined />
+          错误分析
+        </span>
+      ),
+      children: <ErrorList />,
+    },
+  ]
+
+  return (
+    <div style={{ height: '100%', overflow: 'auto' }}>
+      <Tabs
+        defaultActiveKey="overview"
+        items={tabItems}
+        style={{ height: '100%' }}
+        tabBarStyle={{ padding: '0 16px', marginBottom: 0 }}
+      />
     </div>
   )
 }

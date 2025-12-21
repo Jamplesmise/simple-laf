@@ -191,6 +191,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 1;
+  min-width: 0;
+  overflow: visible;
 }
 
 .headerDivider {
@@ -375,6 +378,25 @@
   display: flex;
   gap: 16px;
   margin-bottom: 28px;
+  position: relative;
+}
+
+/* Sprint 10.2: 消息操作按钮容器 */
+.messageActions {
+  position: absolute;
+  right: 0;
+  top: 0;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.messageItem:hover .messageActions {
+  opacity: 1;
+}
+
+/* 在 MessageActions 内部定义的 .actions 样式需要在 hover 时显示 */
+.messageItem:hover .messageActions > div {
+  opacity: 1;
 }
 
 .messageAvatar {
@@ -464,6 +486,23 @@
   font-size: 13px;
   line-height: 1.6;
   background: #fafafa;
+}
+
+/* HTML 预览模式容器 */
+.codeBlockWithPreview {
+  margin: 16px 0;
+}
+
+.previewToggleBar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid #e2e8f0;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  background: #f8fafc;
 }
 
 /* ============================================
@@ -1025,6 +1064,31 @@
     opacity: 1;
     transform: scale(1);
   }
+}
+
+/* ============================================
+   Sprint 10.1: AI 状态面板
+   ============================================ */
+
+.statusPanelWrapper {
+  padding: 0 24px;
+  margin-bottom: 12px;
+}
+
+/* ============================================
+   Canvas 模式样式
+   ============================================ */
+
+.canvasContainer {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Canvas 模式下禁用按钮样式 */
+.selectorPill:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ============================================

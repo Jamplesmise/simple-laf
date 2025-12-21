@@ -89,6 +89,22 @@
 | **Dify Sandbox** | 代码安全执行 |
 | **S3 存储** | 文件存储 (用户上传、云函数生成的文件) |
 
+## AI 工具系统
+
+AI 助手通过工具系统执行操作，工具定义在 `services/ai/tools/` 目录：
+
+| 工具模块 | 文件 | 功能 |
+|---------|------|------|
+| 函数操作 | `function.ts` | create/update/delete/rename 云函数 |
+| 站点操作 | `site.ts` | 站点文件 CRUD |
+| 项目操作 | `projectFile.ts` | 读写项目源代码 |
+| 代码搜索 | `search.ts` | 项目内代码搜索 |
+
+**执行流程**：
+```
+用户消息 → AI 解析意图 → 生成工具调用 → AIExecutor 执行 → 返回结果
+```
+
 ## 数据模型
 
 ### User

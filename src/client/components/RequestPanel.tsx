@@ -1,6 +1,13 @@
-import { useState } from 'react'
-import { Button, Input, Tabs, Select, Space, message } from 'antd'
-import { PlayCircleOutlined, SaveOutlined } from '@ant-design/icons'
+/**
+ * 请求面板组件
+ *
+ * 接口调试面板，支持测试输入持久化
+ * Sprint 19: 测试基础
+ */
+
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Button, Input, Tabs, Select, Space, message, Tooltip } from 'antd'
+import { PlayCircleOutlined, SaveOutlined, CloudUploadOutlined } from '@ant-design/icons'
 import { useFunctionStore } from '../stores/function'
 import { useThemeStore } from '../stores/theme'
 import { functionApi } from '../api/functions'
@@ -24,6 +31,78 @@ export default function RequestPanel({ onResult }: RequestPanelProps) {
   const [headers, setHeaders] = useState('{}')
   const [running, setRunning] = useState(false)
   const [compiling, setCompiling] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  // 跟踪是否有未保存的更改
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const lastLoadedRef = useRef<string | null>(null)
+
+  // 加载函数的测试输入
+  const loadTestInput = useCallback(async (functionId: string) => {
+    try {
+      const res = await functionApi.getTestInput(functionId)
+      if (res.data.data) {
+        const input = res.data.data
+        setMethod(input.method || 'POST')
+        setRequestBody(input.body || '{}')
+        setQueryParams(input.query || '')
+        setHeaders(input.headers || '{}')
+        lastLoadedRef.current = functionId
+        setHasUnsavedChanges(false)
+      } else {
+        // 没有保存的测试输入，使用默认值
+        setMethod('POST')
+        setRequestBody('{}')
+        setQueryParams('')
+        setHeaders('{}')
+        lastLoadedRef.current = functionId
+        setHasUnsavedChanges(false)
+      }
+    } catch {
+      // 加载失败时使用默认值
+      setMethod('POST')
+      setRequestBody('{}')
+      setQueryParams('')
+      setHeaders('{}')
+    }
+  }, [])
+
+  // 当选中的函数变化时加载测试输入
+  useEffect(() => {
+    if (current && current._id !== lastLoadedRef.current) {
+      loadTestInput(current._id)
+    }
+  }, [current, loadTestInput])
+
+  // 保存测试输入
+  const handleSaveTestInput = useCallback(async () => {
+    if (!current) return
+
+    setSaving(true)
+    try {
+      await functionApi.saveTestInput(current._id, {
+        method,
+        body: requestBody,
+        query: queryParams,
+        headers,
+      })
+      setHasUnsavedChanges(false)
+      message.success('测试输入已保存')
+    } catch {
+      message.error('保存测试输入失败')
+    } finally {
+      setSaving(false)
+    }
+  }, [current, method, requestBody, queryParams, headers])
+
+  // 标记有未保存的更改
+  const handleInputChange = useCallback((
+    setter: React.Dispatch<React.SetStateAction<string>>,
+    value: string
+  ) => {
+    setter(value)
+    setHasUnsavedChanges(true)
+  }, [])
 
   const handleRun = async () => {
     if (!current) {
@@ -62,6 +141,11 @@ export default function RequestPanel({ onResult }: RequestPanelProps) {
 
       const invokeResult = await invokeApi.run(current.path || current.name, body)
       onResult(invokeResult)
+
+      // 运行成功后自动保存测试输入（如果有更改）
+      if (hasUnsavedChanges) {
+        handleSaveTestInput()
+      }
     } catch {
       message.error('执行失败')
     } finally {
@@ -73,7 +157,7 @@ export default function RequestPanel({ onResult }: RequestPanelProps) {
     if (!current) return
     try {
       await functionApi.update(current._id, current.code)
-      message.success('保存成功')
+      message.success('代码保存成功')
     } catch {
       message.error('保存失败')
     }
@@ -86,7 +170,7 @@ export default function RequestPanel({ onResult }: RequestPanelProps) {
       children: (
         <TextArea
           value={queryParams}
-          onChange={(e) => setQueryParams(e.target.value)}
+          onChange={(e) => handleInputChange(setQueryParams, e.target.value)}
           placeholder="key=value&#10;key2=value2"
           style={{ fontFamily: 'monospace', height: 120 }}
         />
@@ -98,7 +182,7 @@ export default function RequestPanel({ onResult }: RequestPanelProps) {
       children: (
         <TextArea
           value={requestBody}
-          onChange={(e) => setRequestBody(e.target.value)}
+          onChange={(e) => handleInputChange(setRequestBody, e.target.value)}
           placeholder='{"key": "value"}'
           style={{ fontFamily: 'monospace', height: 120 }}
         />
@@ -110,7 +194,7 @@ export default function RequestPanel({ onResult }: RequestPanelProps) {
       children: (
         <TextArea
           value={headers}
-          onChange={(e) => setHeaders(e.target.value)}
+          onChange={(e) => handleInputChange(setHeaders, e.target.value)}
           placeholder='{"Content-Type": "application/json"}'
           style={{ fontFamily: 'monospace', height: 120 }}
         />
@@ -127,9 +211,15 @@ export default function RequestPanel({ onResult }: RequestPanelProps) {
           borderBottom: `1px solid ${isDark ? '#303030' : '#f0f0f0'}`,
           fontSize: 13,
           fontWeight: 500,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
         }}
       >
-        接口调试
+        <span>接口调试</span>
+        {hasUnsavedChanges && (
+          <span style={{ fontSize: 11, color: '#faad14' }}>未保存</span>
+        )}
       </div>
 
       {/* 请求方法和运行按钮 */}
@@ -142,7 +232,7 @@ export default function RequestPanel({ onResult }: RequestPanelProps) {
         <Space style={{ width: '100%' }}>
           <Select
             value={method}
-            onChange={setMethod}
+            onChange={(v) => handleInputChange(setMethod, v)}
             style={{ width: 90 }}
             size="small"
             options={[
@@ -171,6 +261,15 @@ export default function RequestPanel({ onResult }: RequestPanelProps) {
           >
             保存
           </Button>
+          <Tooltip title="保存测试输入">
+            <Button
+              icon={<CloudUploadOutlined />}
+              onClick={handleSaveTestInput}
+              loading={saving}
+              disabled={!current || !hasUnsavedChanges}
+              size="small"
+            />
+          </Tooltip>
         </Space>
       </div>
 

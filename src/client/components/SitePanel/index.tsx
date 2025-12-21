@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { Layout, Button, Space, Tooltip, message, Upload, FloatButton } from 'antd'
 import {
   UploadOutlined,
@@ -14,7 +14,7 @@ import {
 import { useSiteStore } from '../../stores/site'
 import { useThemeStore } from '../../stores/theme'
 import SiteFileTree from './SiteFileTree'
-import SiteAIDialog from './SiteAIDialog'
+import { AIConversationDialog } from '../AIConversationDialog'
 import type { SiteFile } from '../../api/site'
 
 const { Sider, Content } = Layout
@@ -138,6 +138,15 @@ export default function SitePanel() {
   const hasIndexHtml = files.some(f => f.path === '/index.html')
   const isPreviewingHtml = previewPath !== '/' && (previewPath.endsWith('.html') || previewPath.endsWith('.htm'))
   const canPreview = hasIndexHtml || isPreviewingHtml
+
+  // 转换文件列表为站点上下文格式
+  const siteContextFiles = useMemo(() => {
+    return files.map(f => ({
+      path: f.path,
+      mimeType: f.mimeType,
+      isDirectory: f.isDirectory,
+    }))
+  }, [files])
 
   // 获取预览 URL
   const previewUrl = site ? `/site/${site.userId}${previewPath}?t=${previewKey}` : ''
@@ -351,11 +360,15 @@ export default function SitePanel() {
         />
       </Content>
 
-      {/* AI 对话弹窗 */}
-      <SiteAIDialog
+      {/* AI 对话弹窗 - 站点模式 */}
+      <AIConversationDialog
         open={aiDialogOpen}
         onClose={() => setAiDialogOpen(false)}
-        onContentChange={refreshPreview}
+        mode="site"
+        siteContext={{
+          files: siteContextFiles,
+          onContentChange: refreshPreview,
+        }}
       />
     </Layout>
   )

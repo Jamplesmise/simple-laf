@@ -26,6 +26,7 @@ interface InputAreaProps {
   folders: TreeNode[]
   enableLogAnalysis: boolean
   logDays: number
+  mode?: 'function' | 'site'  // 场景模式
   onValueChange: (value: string) => void
   onSend: () => void
   onFunctionSelect: (fnId: string) => void
@@ -42,6 +43,7 @@ export function InputArea({
   folders,
   enableLogAnalysis,
   logDays,
+  mode = 'function',
   onValueChange,
   onSend,
   onFunctionSelect,
@@ -49,6 +51,8 @@ export function InputArea({
   onLogAnalysisSelect,
   onLogAnalysisRemove,
 }: InputAreaProps) {
+  // 站点模式下禁用函数相关功能
+  const isSiteMode = mode === 'site'
   useThemeColors() // for theme consistency
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const [showFunctionPicker, setShowFunctionPicker] = useState(false)
@@ -67,6 +71,13 @@ export function InputArea({
   // 处理输入变化
   const handleInputChange = (newValue: string) => {
     onValueChange(newValue)
+
+    // 站点模式下禁用 @ 和 / 命令
+    if (isSiteMode) {
+      setShowFunctionPicker(false)
+      setShowSlashMenu(false)
+      return
+    }
 
     // 检测 @ 引用函数
     const lastAtIndex = newValue.lastIndexOf('@')

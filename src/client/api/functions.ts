@@ -36,6 +36,20 @@ interface VersionDiffResponse {
   }
 }
 
+// 测试输入类型 (Sprint 19)
+export interface TestInput {
+  method: string
+  body: string
+  query: string
+  headers: string
+  updatedAt?: string
+}
+
+interface TestInputResponse {
+  success: boolean
+  data: TestInput | null
+}
+
 interface PublishResponse {
   success: boolean
   data: {
@@ -93,4 +107,11 @@ export const functionApi = {
       `/api/functions/${id}/rename`,
       { name }
     ),
+
+  // 测试输入 API (Sprint 19)
+  getTestInput: (id: string) =>
+    client.get<TestInputResponse>(`/api/functions/${id}/test-input`),
+
+  saveTestInput: (id: string, input: Omit<TestInput, 'updatedAt'>) =>
+    client.put<{ success: boolean }>(`/api/functions/${id}/test-input`, input),
 }

@@ -6,6 +6,7 @@ import { createCloudWithEnv } from '../cloud/index.js'
 import * as executionLogService from '../services/executionLog.js'
 import { isTokenAuthEnabled, validateToken } from '../services/apiToken.js'
 import { invokeLimiter } from '../middleware/rateLimit.js'
+import { emitExecutionEvent } from '../middleware/monitor.js'
 
 const router: IRouter = Router()
 
@@ -103,10 +104,12 @@ router.all('/*', invokeLimiter, async (req: Request, res: Response, next: NextFu
     res.set('x-execution-time', String(result.time))
 
     // 记录执行日志
+    const functionId = func._id.toString()
+    const functionName = func.name as string
     executionLogService.create({
       userId,
-      functionId: func._id.toString(),
-      functionName: func.name as string,
+      functionId,
+      functionName,
       trigger: 'public',
       request: {
         method: req.method,
@@ -123,6 +126,17 @@ router.all('/*', invokeLimiter, async (req: Request, res: Response, next: NextFu
       })),
       duration: result.time,
     }).catch(err => console.error('记录执行日志失败:', err))
+
+    // 广播执行事件到监控 WebSocket
+    emitExecutionEvent({
+      userId,
+      functionId,
+      functionName,
+      trigger: 'public',
+      success: !result.error,
+      duration: result.time,
+      error: result.error,
+    })
 
     // 处理错误
     if (result.error) {

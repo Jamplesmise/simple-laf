@@ -18,7 +18,7 @@ import executionLogsRoutes from './routes/executionLogs.js'
 import webhookRoutes from './routes/webhook.js'
 import snippetsRoutes from './routes/snippets.js'
 import searchRoutes from './routes/search.js'
-import aiRoutes from './routes/ai.js'
+import aiRoutes from './routes/ai/index.js'
 import invokeRoutes from './routes/invoke.js'
 import publicRoutes from './routes/public.js'
 import customDomainRoutes from './routes/customDomain.js'
@@ -29,7 +29,9 @@ import auditRoutes from './routes/audit.js'
 import siteRoutes from './routes/site.js'
 import siteFilesRoutes from './routes/site-files.js'
 import siteServeRoutes from './routes/site-serve.js'
+import monitorRoutes from './routes/monitor.js'
 import { setupLspWebSocket } from './lsp/index.js'
+import { setupMonitorWebSocket } from './services/monitor/index.js'
 import * as schedulerService from './services/scheduler.js'
 import * as customDomainService from './services/customDomain.js'
 import { migrateAllFunctionPaths } from './services/path.js'
@@ -100,6 +102,7 @@ app.use('/api/storage', storageRoutes)
 app.use('/api/audit', auditRoutes)
 app.use('/api/site', siteRoutes)
 app.use('/api/site/files', siteFilesRoutes)
+app.use('/api/monitor', monitorRoutes)
 app.use('/invoke', invokeRoutes)
 // 静态站点服务 (独立访问控制)
 app.use('/site', siteServeRoutes)
@@ -151,6 +154,9 @@ const server = http.createServer(app)
 
 // 设置 LSP WebSocket
 setupLspWebSocket(server)
+
+// 设置监控 WebSocket
+setupMonitorWebSocket(server)
 
 /**
  * 启动时恢复数据库中记录的依赖

@@ -378,6 +378,485 @@ export const logTools: AITool[] = [
 ]
 
 /**
+ * 项目文件操作工具 (Sprint 14)
+ *
+ * 让 AI 能够读取和修改项目源代码
+ */
+export const projectTools: AITool[] = [
+  {
+    name: 'read_project_file',
+    description: '读取项目文件内容。可以指定行范围只读取部分内容',
+    parameters: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: '文件路径（相对于项目根目录），如 "src/server/index.ts"',
+        },
+        lineStart: {
+          type: 'number',
+          description: '起始行号（可选，从1开始）',
+        },
+        lineEnd: {
+          type: 'number',
+          description: '结束行号（可选）',
+        },
+      },
+      required: ['path'],
+    },
+  },
+  {
+    name: 'write_project_file',
+    description: '写入项目文件（需要用户确认）。可以选择是否创建备份',
+    parameters: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: '文件路径（相对于项目根目录）',
+        },
+        content: {
+          type: 'string',
+          description: '要写入的文件内容',
+        },
+        createBackup: {
+          type: 'boolean',
+          description: '是否创建备份（默认 true）',
+        },
+      },
+      required: ['path', 'content'],
+    },
+  },
+  {
+    name: 'get_file_tree',
+    description: '获取项目文件树结构。可以指定目录和深度',
+    parameters: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: '起始目录路径（可选，默认为项目根目录）',
+        },
+        depth: {
+          type: 'number',
+          description: '遍历深度（可选，默认 3）',
+        },
+        exclude: {
+          type: 'array',
+          description: '要排除的目录或文件模式',
+          items: { type: 'string' },
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'search_code',
+    description: '在项目中搜索代码。支持正则表达式和文件类型过滤',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: '搜索内容（支持正则表达式）',
+        },
+        filePattern: {
+          type: 'string',
+          description: '文件模式（可选，如 "**/*.ts"）',
+        },
+        caseSensitive: {
+          type: 'boolean',
+          description: '是否区分大小写（默认 false）',
+        },
+      },
+      required: ['query'],
+    },
+  },
+]
+
+/**
+ * 依赖管理工具 (Sprint 15)
+ */
+export const dependencyTools: AITool[] = [
+  {
+    name: 'install_dependency',
+    description: '安装 NPM 依赖包（需要用户确认）。当用户要求安装新的依赖库时使用',
+    parameters: {
+      type: 'object',
+      properties: {
+        packages: {
+          type: 'array',
+          description: '要安装的包名列表，如 ["lodash", "axios"]',
+          items: { type: 'string' },
+        },
+        dev: {
+          type: 'boolean',
+          description: '是否安装为开发依赖（默认 false）',
+        },
+      },
+      required: ['packages'],
+    },
+  },
+  {
+    name: 'update_dependency',
+    description: '更新 NPM 依赖包。当用户要求更新依赖版本时使用',
+    parameters: {
+      type: 'object',
+      properties: {
+        packages: {
+          type: 'array',
+          description: '要更新的包名列表',
+          items: { type: 'string' },
+        },
+        latest: {
+          type: 'boolean',
+          description: '是否更新到最新版本（默认 false，只更新到兼容版本）',
+        },
+      },
+      required: ['packages'],
+    },
+  },
+  {
+    name: 'audit_dependencies',
+    description: '安全审计依赖包。检查项目依赖是否存在安全漏洞',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: [],
+    },
+  },
+  {
+    name: 'list_dependencies',
+    description: '列出项目已安装的依赖包及版本',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: [],
+    },
+  },
+]
+
+/**
+ * Git 工具 (Sprint 17)
+ *
+ * 提供 Git 状态查看、Diff 查看、提交、同步和分支管理功能
+ */
+export const gitTools: AITool[] = [
+  {
+    name: 'git_status',
+    description: '获取 Git 仓库状态。显示当前分支、暂存的文件、修改的文件、未跟踪的文件等',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: [],
+    },
+  },
+  {
+    name: 'git_diff',
+    description: '查看代码变更。可以查看工作区或暂存区的变更，也可以与特定提交比较',
+    parameters: {
+      type: 'object',
+      properties: {
+        ref: {
+          type: 'string',
+          description: '参考点（默认 HEAD），如 "HEAD~1" 或提交 hash',
+        },
+        path: {
+          type: 'string',
+          description: '指定文件路径，只查看该文件的变更',
+        },
+        staged: {
+          type: 'boolean',
+          description: '是否查看暂存区的变更（默认 false）',
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'git_commit',
+    description: '提交代码更改（需要用户确认）。可以指定要提交的文件，或提交所有更改',
+    parameters: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          description: '提交信息',
+        },
+        files: {
+          type: 'array',
+          description: '要暂存并提交的文件列表（不指定则提交所有更改）',
+          items: { type: 'string' },
+        },
+      },
+      required: ['message'],
+    },
+  },
+  {
+    name: 'git_sync',
+    description: '同步远程仓库（pull/push）。需要用户确认，禁止 force push',
+    parameters: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          description: '同步操作类型',
+          enum: ['pull', 'push'],
+        },
+        remote: {
+          type: 'string',
+          description: '远程仓库名（默认 origin）',
+        },
+        branch: {
+          type: 'string',
+          description: '分支名（默认当前分支）',
+        },
+      },
+      required: ['action'],
+    },
+  },
+  {
+    name: 'git_branch',
+    description: '管理 Git 分支。支持列出、创建、切换和删除分支',
+    parameters: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          description: '分支操作类型',
+          enum: ['list', 'create', 'checkout', 'delete'],
+        },
+        name: {
+          type: 'string',
+          description: '分支名（create/checkout/delete 时必填）',
+        },
+      },
+      required: ['action'],
+    },
+  },
+  {
+    name: 'git_log',
+    description: '获取提交历史记录',
+    parameters: {
+      type: 'object',
+      properties: {
+        count: {
+          type: 'number',
+          description: '显示的提交数量（默认 10）',
+        },
+        path: {
+          type: 'string',
+          description: '指定文件路径，只显示该文件的提交历史',
+        },
+      },
+      required: [],
+    },
+  },
+]
+
+/**
+ * 环境变量工具 (Sprint 15)
+ */
+export const envTools: AITool[] = [
+  {
+    name: 'set_env_variable',
+    description: '设置环境变量。当用户要求配置环境变量时使用',
+    parameters: {
+      type: 'object',
+      properties: {
+        key: {
+          type: 'string',
+          description: '变量名（大写字母和下划线，如 API_KEY）',
+        },
+        value: {
+          type: 'string',
+          description: '变量值',
+        },
+        isSecret: {
+          type: 'boolean',
+          description: '是否为敏感信息（自动检测，可手动指定）',
+        },
+        description: {
+          type: 'string',
+          description: '变量描述（可选）',
+        },
+      },
+      required: ['key', 'value'],
+    },
+  },
+  {
+    name: 'delete_env_variable',
+    description: '删除环境变量。当用户要求移除某个环境变量时使用',
+    parameters: {
+      type: 'object',
+      properties: {
+        key: {
+          type: 'string',
+          description: '要删除的变量名',
+        },
+      },
+      required: ['key'],
+    },
+  },
+  {
+    name: 'list_env_variables',
+    description: '列出所有环境变量（敏感值脱敏显示）',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: [],
+    },
+  },
+]
+
+/**
+ * 数据库工具 (Sprint 18)
+ *
+ * 提供 MongoDB 集合分析、查询执行、索引建议功能
+ */
+export const databaseTools: AITool[] = [
+  {
+    name: 'analyze_collection',
+    description: '分析 MongoDB 集合结构和数据分布。获取字段 Schema、索引信息、文档统计',
+    parameters: {
+      type: 'object',
+      properties: {
+        collection: {
+          type: 'string',
+          description: '要分析的集合名称',
+        },
+      },
+      required: ['collection'],
+    },
+  },
+  {
+    name: 'execute_query',
+    description: '执行 MongoDB 查询（只读）。支持查询、投影、排序、分页。结果自动脱敏',
+    parameters: {
+      type: 'object',
+      properties: {
+        collection: {
+          type: 'string',
+          description: '要查询的集合名称',
+        },
+        query: {
+          type: 'object',
+          description: 'MongoDB 查询条件，如 { "status": "active" }',
+        },
+        projection: {
+          type: 'object',
+          description: '字段投影，如 { "name": 1, "email": 1 }（可选）',
+        },
+        sort: {
+          type: 'object',
+          description: '排序条件，如 { "createdAt": -1 }（可选）',
+        },
+        limit: {
+          type: 'number',
+          description: '返回数量限制，最大 100（默认 10）',
+        },
+        skip: {
+          type: 'number',
+          description: '跳过的文档数量（可选）',
+        },
+      },
+      required: ['collection', 'query'],
+    },
+  },
+  {
+    name: 'suggest_indexes',
+    description: '分析集合并建议索引优化。基于字段类型和常见查询模式给出建议',
+    parameters: {
+      type: 'object',
+      properties: {
+        collection: {
+          type: 'string',
+          description: '要分析索引的集合名称',
+        },
+      },
+      required: ['collection'],
+    },
+  },
+]
+
+/**
+ * 测试工具 (Sprint 19)
+ *
+ * 提供云函数测试执行和测试输入持久化功能
+ */
+export const testTools: AITool[] = [
+  {
+    name: 'test_function',
+    description: '测试云函数。执行函数并返回结果、控制台日志和执行时间。可以指定测试输入（body, query, headers）',
+    parameters: {
+      type: 'object',
+      properties: {
+        functionId: {
+          type: 'string',
+          description: '要测试的函数 ID',
+        },
+        input: {
+          type: 'object',
+          description: '测试输入，包含 body（请求体）、query（查询参数）、headers（请求头）',
+        },
+      },
+      required: ['functionId'],
+    },
+  },
+  {
+    name: 'batch_test_function',
+    description: '批量测试云函数。使用多个测试用例测试同一个函数，返回汇总结果',
+    parameters: {
+      type: 'object',
+      properties: {
+        functionId: {
+          type: 'string',
+          description: '要测试的函数 ID',
+        },
+        testCases: {
+          type: 'array',
+          description: '测试用例列表，每个包含 name（测试名称）和 input（测试输入）',
+          items: { type: 'object' },
+        },
+      },
+      required: ['functionId', 'testCases'],
+    },
+  },
+  {
+    name: 'save_test_input',
+    description: '保存函数的默认测试输入。下次打开函数时会自动加载',
+    parameters: {
+      type: 'object',
+      properties: {
+        functionId: {
+          type: 'string',
+          description: '函数 ID',
+        },
+        input: {
+          type: 'object',
+          description: '测试输入，包含 method、body、query、headers',
+        },
+      },
+      required: ['functionId', 'input'],
+    },
+  },
+  {
+    name: 'get_test_input',
+    description: '获取函数保存的默认测试输入',
+    parameters: {
+      type: 'object',
+      properties: {
+        functionId: {
+          type: 'string',
+          description: '函数 ID',
+        },
+      },
+      required: ['functionId'],
+    },
+  },
+]
+
+/**
  * 所有工具
  */
 export const allTools: AITool[] = [
@@ -386,6 +865,12 @@ export const allTools: AITool[] = [
   ...debugTools,
   ...logTools,
   ...siteTools,
+  ...projectTools,
+  ...dependencyTools,
+  ...envTools,
+  ...gitTools,
+  ...databaseTools,
+  ...testTools,
 ]
 
 /**
@@ -403,6 +888,36 @@ export const toolToOperationType: Record<string, string> = {
   site_update_file: 'siteUpdateFile',
   site_delete_file: 'siteDeleteFile',
   site_create_folder: 'siteCreateFolder',
+  // 项目文件操作
+  read_project_file: 'readProjectFile',
+  write_project_file: 'writeProjectFile',
+  get_file_tree: 'getFileTree',
+  search_code: 'searchCode',
+  // 依赖管理操作 (Sprint 15)
+  install_dependency: 'installDependency',
+  update_dependency: 'updateDependency',
+  audit_dependencies: 'auditDependencies',
+  list_dependencies: 'listDependencies',
+  // 环境变量操作 (Sprint 15)
+  set_env_variable: 'setEnvVariable',
+  delete_env_variable: 'deleteEnvVariable',
+  list_env_variables: 'listEnvVariables',
+  // Git 操作 (Sprint 17)
+  git_status: 'gitStatus',
+  git_diff: 'gitDiff',
+  git_commit: 'gitCommit',
+  git_sync: 'gitSync',
+  git_branch: 'gitBranch',
+  git_log: 'gitLog',
+  // 数据库操作 (Sprint 18)
+  analyze_collection: 'analyzeCollection',
+  execute_query: 'executeQuery',
+  suggest_indexes: 'suggestIndexes',
+  // 测试操作 (Sprint 19)
+  test_function: 'testFunction',
+  batch_test_function: 'batchTestFunction',
+  save_test_input: 'saveTestInput',
+  get_test_input: 'getTestInput',
 }
 
 /**

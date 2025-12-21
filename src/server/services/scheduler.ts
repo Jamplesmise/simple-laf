@@ -4,6 +4,7 @@ import { executeFunction, type ExecuteResult } from '../engine/executor.js'
 import { createCloudWithEnv } from '../cloud/index.js'
 import * as functionService from './function.js'
 import * as executionLogService from './executionLog.js'
+import { emitExecutionEvent } from '../middleware/monitor.js'
 
 export interface ScheduledTask {
   _id?: ObjectId
@@ -259,6 +260,17 @@ async function executeTask(task: ScheduledTask): Promise<ExecuteResult> {
       duration,
     }).catch(err => console.error('记录执行日志失败:', err))
 
+    // 广播执行事件
+    emitExecutionEvent({
+      userId: task.userId,
+      functionId: task.functionId,
+      functionName: task.functionName,
+      trigger: 'scheduler',
+      success: !result.error,
+      duration,
+      error: result.error,
+    })
+
     // 更新任务状态
     await db.collection<ScheduledTask>('scheduled_tasks').updateOne(
       { _id: task._id },
@@ -297,6 +309,17 @@ async function executeTask(task: ScheduledTask): Promise<ExecuteResult> {
       logs: [],
       duration,
     }).catch(err => console.error('记录执行日志失败:', err))
+
+    // 广播执行事件
+    emitExecutionEvent({
+      userId: task.userId,
+      functionId: task.functionId,
+      functionName: task.functionName,
+      trigger: 'scheduler',
+      success: false,
+      duration,
+      error: errorMessage,
+    })
 
     // 更新任务状态
     await db.collection<ScheduledTask>('scheduled_tasks').updateOne(

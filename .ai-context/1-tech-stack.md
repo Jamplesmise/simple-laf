@@ -32,6 +32,7 @@
 | typescript-language-server | 5.x | LSP 服务 |
 | ws | 8.x | WebSocket |
 | mongodb | 6.x | 数据库驱动 |
+| glob | 13.x | 文件模式匹配 (AI 项目操作) |
 
 ## 明确禁止
 

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ConfigProvider, App as AntdApp, theme } from 'antd'
 import type { ThemeConfig } from 'antd'
@@ -8,6 +9,8 @@ import { colors, typography } from './styles/tokens'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import IDE from './pages/IDE'
+import { AIFloatingBall } from './components/AIFloatingBall'
+import { AIConversationDialog } from './components/AIConversationDialog'
 
 // Ant Design 主题配置
 const getThemeConfig = (isDark: boolean): ThemeConfig => ({
@@ -101,6 +104,8 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const themeMode = useThemeStore((state) => state.mode)
+  const token = useAuthStore((state) => state.token)
+  const [aiDialogOpen, setAiDialogOpen] = useState(false)
 
   return (
     <ConfigProvider
@@ -136,6 +141,21 @@ export default function App() {
             />
           </Routes>
         </BrowserRouter>
+
+        {/* 全局 AI 悬浮球 - 登录后显示 */}
+        {token && (
+          <AIFloatingBall
+            onClick={() => setAiDialogOpen(true)}
+          />
+        )}
+
+        {/* 全局 AI 对话框 */}
+        {token && (
+          <AIConversationDialog
+            open={aiDialogOpen}
+            onClose={() => setAiDialogOpen(false)}
+          />
+        )}
       </AntdApp>
     </ConfigProvider>
   )

@@ -6,9 +6,9 @@
 
 **Simple IDE** - 轻量级 Serverless Web IDE，参考 [laf](https://github.com/labring/laf) 核心功能实现。
 
-**当前状态**：v2.0.0，升级开发已完成 9 个 Sprint。
+**当前状态**：v2.0.0，升级开发已完成 19 个 Sprint。AI 全能助手开发进行中（Sprint 10-20）。
 
-**核心功能**：云函数编辑 | LSP 智能提示 | 即时执行调试 | NPM 依赖管理 | 版本控制 | Git 同步 | 定时任务 | Webhook | AI 辅助编程 | AI Debug | 自定义域名 | API Token | MongoDB 管理 | 函数审计日志 | 速率限制 | 函数重命名 | **站点托管**
+**核心功能**：云函数编辑 | LSP 智能提示 | 即时执行调试 | NPM 依赖管理 | 版本控制 | Git 同步 | 定时任务 | Webhook | AI 辅助编程 | AI Debug | 自定义域名 | API Token | MongoDB 管理 | 函数审计日志 | 速率限制 | 函数重命名 | 站点托管 | AI 项目文件操作 | **云函数测试**
 
 **不做什么**：多租户隔离、自动扩缩容、计费系统、团队协作、Kubernetes 部署
 
@@ -31,7 +31,9 @@
 simple-ide/
 ├── .ai-context/              # AI 上下文文档 (详细说明)
 ├── .claude/CLAUDE.md         # 本文件 (快速入门)
-├── docs/upgrade-phases/      # 升级版开发文档
+├── docs/
+│   ├── upgrade-phases/       # v2.0 升级开发文档 (Sprint 1-9)
+│   └── ai-development-plan/  # AI 全能助手开发计划 (Sprint 10-20)
 ├── src/
 │   ├── server/               # 后端
 │   │   ├── routes/           # API 路由
@@ -200,6 +202,46 @@ GET /api/audit/stats              # 审计统计
 
 **访问地址**：`/site/{userId}/` 或 `/site/{userId}/{filePath}`
 
+## AI 项目文件操作 (Sprint 14)
+
+AI 助手可以读取和修改项目源代码，支持以下工具：
+
+**可用工具**：
+- `read_project_file` - 读取项目文件内容
+- `write_project_file` - 写入/修改项目文件
+- `get_file_tree` - 获取项目文件树结构
+- `search_code` - 在项目中搜索代码
+
+**安全限制**：
+- 白名单路径：`src/`, `docs/`, `package.json`, `tsconfig*.json`, `.env.example`
+- 黑名单模式：`node_modules/`, `.git/`, `dist/`, `*.log`, `.env`（非 example）
+
+**路径约定**：所有路径相对于项目根目录，如 `src/server/routes/ai.ts`
+
+## 云函数测试 (Sprint 19)
+
+云函数测试功能，支持测试输入持久化和 AI 辅助测试。
+
+**核心功能**：
+- 测试输入持久化（method/body/query/headers）
+- 切换函数时自动加载保存的测试输入
+- 运行成功后自动保存测试输入
+- AI 可执行云函数测试并获取控制台输出
+
+**AI 测试工具**：
+- `test_function` - 执行单个云函数测试
+- `batch_test_function` - 批量测试多个用例
+- `save_test_input` - 保存测试输入
+- `get_test_input` - 获取保存的测试输入
+
+**API 接口**：
+```
+GET /api/functions/:id/test-input   # 获取测试输入
+PUT /api/functions/:id/test-input   # 保存测试输入
+```
+
+**数据存储**：测试输入存储在 `functions` 集合的 `testInput` 字段中。
+
 ## 云函数代码格式
 
 ```typescript
@@ -228,6 +270,53 @@ export default async function (ctx: FunctionContext) {
 
 **Git 提交**：`feat:` | `fix:` | `docs:` | `refactor:` | `chore:`
 
+## 文件大小限制 ⚠️
+
+**单文件行数上限**：
+- 路由文件 (routes/*.ts)：< 300 行
+- 服务文件 (services/*.ts)：< 500 行
+- 组件文件 (components/*.tsx)：< 400 行
+- 页面文件 (pages/*.tsx)：< 500 行
+
+**超限处理**：
+- 超过限制时必须拆分为模块目录结构
+- 例如：`routes/ai.ts` (3000行) → `routes/ai/` 目录
+  ```
+  routes/ai/
+  ├── index.ts        # 主入口，合并子路由
+  ├── config.ts       # 配置相关
+  ├── generate.ts     # 生成相关
+  ├── conversations.ts # 对话相关
+  └── ...
+  ```
+
+**拆分原则**：
+- 按功能域拆分，每个文件职责单一
+- 共享工具函数放入 `utils.ts`
+- 主入口 `index.ts` 只做路由合并，不含业务逻辑
+- 拆分后每个模块 100-500 行为宜
+
+**已拆分的模块目录**（参考结构）：
+```
+后端:
+├── routes/ai/              # AI 路由 (conversations/, generate/)
+├── routes/functions/       # 函数路由
+├── services/ai/executor/   # AI 执行器
+├── services/ai/tools/      # AI 工具 (projectFile, search)
+└── services/git/           # Git 服务
+
+前端:
+├── components/SystemPromptManager/
+├── components/SitePanel/SiteAIPanel/
+├── components/StoragePanel/
+└── pages/IDE/
+```
+
+**预防措施**：
+- 新增功能前检查目标文件行数
+- 接近 300 行时考虑提前拆分
+- 定期运行 `wc -l src/**/*.ts | sort -rn | head -20` 检查
+
 ## AI 助手操作规范
 
 - **长时间命令**：超过 30 秒中止，交给用户执行
@@ -247,11 +336,36 @@ export default async function (ctx: FunctionContext) {
 | `.ai-context/5-development-guide.md` | 开发环境 |
 | `.ai-context/6-features.md` | 功能详解 |
 | `.ai-context/7-frontend-architecture.md` | 前端架构 |
-| `docs/upgrade-phases/` | Sprint 开发文档 |
+| `docs/upgrade-phases/` | v2.0 升级开发文档 (Sprint 1-9) |
+| `docs/ai-development-plan/` | AI 全能助手开发计划 (Sprint 10-20) |
+| `docs/AI-Assistant-Analysis-and-Roadmap.md` | AI 助手现状分析与路线图 |
+
+## AI 全能助手开发计划 (Sprint 10-20)
+
+构建能够操控整个平台的 AI 助手，目标完成度从 31% 提升至 85%。
+
+**开发阶段**：
+
+| Phase | Sprint | 目标 | 可并行 |
+|-------|--------|------|--------|
+| Phase 1 | 10-12 | Chat 增强 (状态可视化/Canvas/Artifacts) | 11-12 可并行 |
+| Phase 1.5 | 13 | 实时监控 (可选) | - |
+| Phase 2 | 14-16 | 开发能力 (项目操作/依赖/上下文控制) | 14-15 可并行 |
+| Phase 3 | 17-18 | Git + 数据库 | 可并行 |
+| Phase 4 | 19-20 | 测试增强 | - |
+
+**开发原则**：
+- 每个任务控制在 50K tokens 以内
+- 单次改动 < 5 个文件，代码 < 200 行
+- 前后端任务可并行开发
+
+详见 `docs/ai-development-plan/README.md`
 
 ## MVU 原则
 
 开发时遵循 **Minimum Viable Unit**：
 - 单次改动 < 5 个文件
-- 单次代码 < 200 行
+- 单次新增代码 < 200 行
+- 单个文件不超过行数限制（见"文件大小限制"）
 - 每个单元可独立验证
+- 功能增长时及时拆分模块
