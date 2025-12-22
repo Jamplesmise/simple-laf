@@ -1,38 +1,16 @@
 import React, { useCallback } from 'react'
-import { MonkeyProgrammer, MonkeyStatus } from './MonkeyProgrammer'
-import { usePosition } from './usePosition'
+import { PixelMonkey } from './PixelMonkey'
 
 interface AIFloatingBallProps {
-  status?: MonkeyStatus
+  status?: string // 保持接口兼容
   onClick?: () => void
 }
 
 export const AIFloatingBall: React.FC<AIFloatingBallProps> = ({
-  status = 'idle',
   onClick,
 }) => {
-  const { position, isDragging, hasMoved, handleMouseDown } = usePosition()
-
-  const handleClick = useCallback(() => {
-    // 只有没有拖拽移动时才触发点击
-    if (!hasMoved.current && onClick) {
-      onClick()
-    }
-  }, [onClick])
-
-  return (
-    <MonkeyProgrammer
-      status={status}
-      isDragging={isDragging}
-      style={{
-        left: position.x,
-        top: position.y,
-      }}
-      onMouseDown={handleMouseDown}
-      onClick={handleClick}
-    />
-  )
+  // 把外部传进来的 onClick (打开AI助手) 传递给猴子组件
+  return <PixelMonkey onClick={onClick} />
 }
 
-export { MonkeyProgrammer, MonkeyStatus } from './MonkeyProgrammer'
-export { usePosition } from './usePosition'
+export * from './PixelMonkey'

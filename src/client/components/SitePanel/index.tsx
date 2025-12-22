@@ -1,8 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
-import { Layout, Button, Space, Tooltip, message, Upload, FloatButton } from 'antd'
+import { Layout, Button, Space, Tooltip, message, Upload } from 'antd'
 import {
   UploadOutlined,
-  RobotOutlined,
   ReloadOutlined,
   DesktopOutlined,
   TabletOutlined,
@@ -15,6 +14,7 @@ import { useSiteStore } from '../../stores/site'
 import { useThemeStore } from '../../stores/theme'
 import SiteFileTree from './SiteFileTree'
 import { AIConversationDialog } from '../AIConversationDialog'
+import { AIFloatingBall } from '../AIFloatingBall'
 import type { SiteFile } from '../../api/site'
 
 const { Sider, Content } = Layout
@@ -344,20 +344,8 @@ export default function SitePanel() {
           )}
         </div>
 
-        {/* 浮动 AI 按钮 */}
-        <FloatButton
-          icon={<RobotOutlined />}
-          type="primary"
-          tooltip="AI 建站助手"
-          onClick={() => setAiDialogOpen(true)}
-          style={{
-            right: 24,
-            bottom: 24,
-            width: 56,
-            height: 56,
-            boxShadow: '0 4px 12px rgba(0, 169, 166, 0.4)',
-          }}
-        />
+        {/* 浮动 AI 按钮 - 猴子程序员 */}
+        <AIFloatingBall onClick={() => setAiDialogOpen(true)} />
       </Content>
 
       {/* AI 对话弹窗 - 站点模式 */}
