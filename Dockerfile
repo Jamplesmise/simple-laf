@@ -20,20 +20,22 @@ COPY index.html vite.config.ts tsconfig.json tsconfig.server.json ./
 # Build client and server
 RUN pnpm build
 
+# Prune dev dependencies, keep only production deps
+RUN pnpm prune --prod
+
 # Production stage
 FROM node:22-alpine
 
 WORKDIR /app
 
 # Install git (for Git sync) and global tools
-RUN apk add --no-cache git && npm install -g pnpm typescript typescript-language-server
+RUN apk add --no-cache git && npm install -g typescript typescript-language-server
 
-# Configure pnpm mirror
-RUN pnpm config set registry https://registry.npmmirror.com
+# Copy node_modules from builder (already pruned to prod only)
+COPY --from=builder /app/node_modules ./node_modules
 
-# Copy package files and install production dependencies
-COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --prod --frozen-lockfile || pnpm install --prod
+# Copy package.json for module resolution
+COPY package.json ./
 
 # Copy build artifacts
 COPY --from=builder /app/dist ./dist
