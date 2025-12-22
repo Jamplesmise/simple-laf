@@ -38,21 +38,10 @@ RUN pnpm install --prod --frozen-lockfile || pnpm install --prod
 # Copy build artifacts
 COPY --from=builder /app/dist ./dist
 
-# Copy and setup entrypoint
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
-
-# Backup node_modules for volume initialization (used by docker-entrypoint.sh)
-RUN cp -r /app/node_modules /app/node_modules_backup
-
-# Recreate empty node_modules for volume mount point
-RUN rm -rf /app/node_modules && mkdir -p /app/node_modules
-
 # Environment
 ENV NODE_ENV=production
 ENV PORT=3000
 
 EXPOSE 3000
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["node", "dist/server/index.js"]
