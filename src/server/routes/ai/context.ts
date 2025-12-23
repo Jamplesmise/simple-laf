@@ -48,6 +48,7 @@ router.get('/conversations/:id/context', async (req: AuthRequest, res) => {
     }
 
     let modelName = 'gpt-4'
+    let contextLimit: number | undefined
     if (model) {
       modelName = model as string
     } else if (conversation.modelId) {
@@ -56,10 +57,11 @@ router.get('/conversations/:id/context', async (req: AuthRequest, res) => {
       })
       if (modelDoc) {
         modelName = modelDoc.name
+        contextLimit = modelDoc.contextLimit
       }
     }
 
-    const stats = await getConversationContextStats(id, modelName)
+    const stats = await getConversationContextStats(id, modelName, contextLimit)
 
     res.json({
       success: true,

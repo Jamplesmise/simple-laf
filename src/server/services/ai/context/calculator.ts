@@ -54,17 +54,25 @@ export function estimateCodeTokens(code: string): number {
 
 /**
  * 获取模型的上下文限制
+ * @param modelName 模型名称
+ * @param userContextLimit 用户配置的上下文限制（优先使用）
  */
-export function getModelContextLimit(modelName: string): ModelContextLimits {
-  // 尝试匹配模型名称
-  const normalizedName = modelName.toLowerCase()
+export function getModelContextLimit(modelName: string, userContextLimit?: number): ModelContextLimits {
+  let maxTokens: number
 
-  let maxTokens = 8192 // 默认值
+  // 优先使用用户配置的上下文限制
+  if (userContextLimit && userContextLimit > 0) {
+    maxTokens = userContextLimit
+  } else {
+    // 尝试匹配模型名称
+    const normalizedName = modelName.toLowerCase()
+    maxTokens = 128000 // 默认值
 
-  for (const [pattern, limit] of Object.entries(DEFAULT_CONTEXT_LIMITS)) {
-    if (normalizedName.includes(pattern.toLowerCase())) {
-      maxTokens = limit as number
-      break
+    for (const [pattern, limit] of Object.entries(DEFAULT_CONTEXT_LIMITS)) {
+      if (normalizedName.includes(pattern.toLowerCase())) {
+        maxTokens = limit as number
+        break
+      }
     }
   }
 
@@ -86,10 +94,14 @@ function truncateContent(content: string, maxLength: number = 100): string {
 
 /**
  * 获取对话的上下文统计信息
+ * @param conversationId 对话 ID
+ * @param modelName 模型名称
+ * @param contextLimit 用户配置的上下文限制（可选）
  */
 export async function getConversationContextStats(
   conversationId: string | ObjectId,
-  modelName: string = 'gpt-4'
+  modelName: string = 'gpt-4',
+  contextLimit?: number
 ): Promise<ContextStats> {
   const db = getDB()
   const convId = typeof conversationId === 'string'
@@ -108,8 +120,8 @@ export async function getConversationContextStats(
     .sort({ createdAt: 1 })
     .toArray()
 
-  // 获取模型上下文限制
-  const limits = getModelContextLimit(modelName)
+  // 获取模型上下文限制（优先使用用户配置）
+  const limits = getModelContextLimit(modelName, contextLimit)
 
   // 构建上下文项列表
   const items: ContextItem[] = []

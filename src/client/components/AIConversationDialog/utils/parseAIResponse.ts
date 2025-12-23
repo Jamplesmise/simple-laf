@@ -227,6 +227,37 @@ function convertToolCallToOperation(tool: string, args: Record<string, unknown>)
         name: '重构分析',
         functionId: args.functionId as string,
       }
+    // 站点文件操作
+    case 'site_create_file':
+    case 'siteCreateFile':
+      return {
+        type: 'site_create',
+        name: args.path as string,
+        description: `创建站点文件`,
+        code: args.content as string,
+      }
+    case 'site_update_file':
+    case 'siteUpdateFile':
+      return {
+        type: 'site_update',
+        name: args.path as string,
+        description: `更新站点文件`,
+        code: args.content as string,
+      }
+    case 'site_delete_file':
+    case 'siteDeleteFile':
+      return {
+        type: 'site_delete',
+        name: args.path as string,
+        description: `删除站点文件`,
+      }
+    case 'site_create_folder':
+    case 'siteCreateFolder':
+      return {
+        type: 'site_folder',
+        name: args.path as string,
+        description: `创建站点文件夹`,
+      }
     default:
       return {
         type: tool,

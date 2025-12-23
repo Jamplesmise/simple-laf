@@ -18,6 +18,7 @@ export interface PullResult {
 // 同步变更项
 export interface SyncChange {
   name: string
+  path: string  // 完整路径，包含文件夹 (如 "folder/test")
   status: 'added' | 'modified' | 'deleted' | 'conflict'
   localCode?: string
   remoteCode?: string
@@ -64,6 +65,7 @@ export const gitApi = {
     branch: string
     token?: string
     functionsPath: string
+    clearToken?: boolean  // 明确要求清除 Token（切换到公开仓库时）
   }) => client.put<{ success: boolean }>('/api/git/config', config),
 
   // 预览拉取

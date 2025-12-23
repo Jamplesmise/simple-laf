@@ -155,8 +155,22 @@ export async function compressContext(
     ? new (await import('mongodb')).ObjectId(conversationId)
     : conversationId
 
+  // 获取对话信息以获取模型配置
+  const conversation = await db.collection('ai_conversations').findOne({ _id: convId })
+  let modelName = 'gpt-4'
+  let contextLimit: number | undefined
+  if (conversation?.modelId) {
+    const modelDoc = await db.collection('ai_models').findOne({
+      _id: new (await import('mongodb')).ObjectId(conversation.modelId)
+    })
+    if (modelDoc) {
+      modelName = modelDoc.name
+      contextLimit = modelDoc.contextLimit
+    }
+  }
+
   // 获取当前上下文统计
-  const stats = await getConversationContextStats(conversationId)
+  const stats = await getConversationContextStats(conversationId, modelName, contextLimit)
   const beforeTokens = stats.usage.used
   const actions: CompressAction[] = []
 
@@ -355,8 +369,22 @@ export async function deleteContextItems(
     ? new (await import('mongodb')).ObjectId(conversationId)
     : conversationId
 
+  // 获取对话信息以获取模型配置
+  const conversation = await db.collection('ai_conversations').findOne({ _id: convId })
+  let modelName = 'gpt-4'
+  let contextLimit: number | undefined
+  if (conversation?.modelId) {
+    const modelDoc = await db.collection('ai_models').findOne({
+      _id: new (await import('mongodb')).ObjectId(conversation.modelId)
+    })
+    if (modelDoc) {
+      modelName = modelDoc.name
+      contextLimit = modelDoc.contextLimit
+    }
+  }
+
   // 获取当前统计
-  const stats = await getConversationContextStats(conversationId)
+  const stats = await getConversationContextStats(conversationId, modelName, contextLimit)
   let tokensSaved = 0
   let deletedCount = 0
 

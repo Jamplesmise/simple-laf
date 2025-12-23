@@ -31,6 +31,13 @@ import { someHelper } from '@/utils/helpers'
 import validateInput from '@/validators/inputValidator'
 \`\`\`
 
+使用环境变量:
+\`\`\`typescript
+// 通过 cloud.env 获取环境变量
+const apiKey = cloud.env.API_KEY
+const dbUrl = cloud.env.DATABASE_URL
+\`\`\`
+
 要求:
 1. 生成完整可运行的代码
 2. 使用 TypeScript，添加必要的类型注解
@@ -84,6 +91,12 @@ export default async function (ctx: FunctionContext) {
 \`\`\`typescript
 import { someHelper } from '@/utils/helpers'
 import validateInput from '@/validators/inputValidator'
+\`\`\`
+
+使用环境变量:
+\`\`\`typescript
+// 通过 cloud.env 获取环境变量
+const apiKey = cloud.env.API_KEY
 \`\`\`
 
 要求:

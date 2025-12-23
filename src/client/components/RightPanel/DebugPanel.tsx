@@ -74,7 +74,7 @@ export function DebugPanel({
   const [paramsTab, setParamsTab] = useState('body')
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: t.bgCard }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* 请求方法和按钮 */}
       <div style={{
         padding: '10px 12px',
@@ -82,7 +82,6 @@ export function DebugPanel({
         alignItems: 'center',
         gap: 8,
         borderBottom: `1px solid ${t.border}`,
-        background: t.bgCard,
       }}>
         <Select
           value={method}
@@ -119,7 +118,6 @@ export function DebugPanel({
         flex: 1,
         overflow: 'auto',
         padding: 12,
-        background: t.bgMuted,
       }}>
         <ParamsEditor
           paramsTab={paramsTab}

@@ -23,7 +23,7 @@ interface RightPanelProps {
 }
 
 export default function RightPanel({ onResult }: RightPanelProps) {
-  const { current, refreshCurrent } = useFunctionStore()
+  const { current, refreshCurrent, setLastPublishedCode } = useFunctionStore()
   const { t } = useThemeColors()
 
   // 请求参数状态
@@ -171,6 +171,10 @@ export default function RightPanel({ onResult }: RightPanelProps) {
   const handlePublished = (version: number) => {
     message.success(`发版成功，版本 v${version}`)
     loadVersions()
+    // 更新 lastPublishedCode 以清除红点标记
+    if (current) {
+      setLastPublishedCode(current._id)
+    }
   }
 
   const publicUrl = current ? `${window.location.origin}/${current.path || current.name}` : ''
@@ -180,7 +184,6 @@ export default function RightPanel({ onResult }: RightPanelProps) {
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
-      background: t.bgCard,
       borderLeft: `1px solid ${t.border}`,
     }}>
       {/* API 链接 + 发布按钮 */}
@@ -190,14 +193,12 @@ export default function RightPanel({ onResult }: RightPanelProps) {
         alignItems: 'center',
         gap: 8,
         borderBottom: `1px solid ${t.border}`,
-        background: t.bgCard,
       }}>
         <div
           onClick={handleCopy}
           style={{
             flex: 1,
             padding: '6px 10px',
-            background: t.bgCard,
             border: `1px solid ${t.border}`,
             borderRadius: 6,
             fontFamily: codeFont,
@@ -226,7 +227,6 @@ export default function RightPanel({ onResult }: RightPanelProps) {
               transform: 'translateY(-50%)',
               fontSize: 11,
               color: t.accent,
-              background: t.bgCard,
               padding: '0 4px',
             }}>
               已复制
@@ -259,7 +259,6 @@ export default function RightPanel({ onResult }: RightPanelProps) {
         tabBarStyle={{
           margin: 0,
           padding: '4px 12px 0',
-          background: t.bgCard,
           borderBottom: `1px solid ${t.border}`,
         }}
         items={[

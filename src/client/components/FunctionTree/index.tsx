@@ -36,7 +36,8 @@ interface FunctionTreeProps {
 }
 
 export default function FunctionTree({ onRefresh }: FunctionTreeProps) {
-  const { openTab, hasUnpublishedChanges } = useFunctionStore()
+  // 订阅 lastPublishedCodes 和 openTabs 以确保发布后红点状态能及时更新
+  const { openTab, hasUnpublishedChanges, lastPublishedCodes, openTabs } = useFunctionStore()
   const { openConversationDialog } = useAIStore()
 
   // 树数据

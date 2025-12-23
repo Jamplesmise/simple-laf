@@ -31,7 +31,8 @@ export interface AIModel {
   name: string
   alias: string
   temperature: number
-  maxTokens: number
+  maxTokens: number      // 单次输出上限
+  contextLimit?: number  // 上下文窗口大小
   pricing?: ModelPricing
   supportsThinking?: boolean  // 是否支持深度思考模式
   isDefault: boolean

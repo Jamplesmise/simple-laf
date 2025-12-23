@@ -250,6 +250,8 @@ import cloud from '@/cloud-sdk'
 export default async function (ctx: FunctionContext) {
   // ctx.body: 请求体, ctx.query: 查询参数
   // ctx.headers: 请求头, ctx.method: HTTP 方法
+  // cloud.env.变量名: 获取环境变量 (如 cloud.env.API_KEY)
+  // cloud.database(): 获取 MongoDB 数据库实例
   return { data: 'result' }
 }
 ```

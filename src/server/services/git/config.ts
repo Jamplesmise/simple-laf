@@ -10,12 +10,14 @@ export async function getGitConfig(userId: ObjectId): Promise<GitConfig | null> 
 }
 
 // 保存配置
+// clearToken: 明确要求清除 Token（用于切换到公开仓库）
 export async function saveGitConfig(
   userId: ObjectId,
   repoUrl: string,
   branch: string,
   token: string | undefined,
-  functionsPath: string
+  functionsPath: string,
+  clearToken: boolean = false
 ): Promise<void> {
   const db = getDB()
 
@@ -26,19 +28,28 @@ export async function saveGitConfig(
     updatedAt: new Date()
   }
 
-  // 只有提供了新 token 才更新
+  // 如果提供了新 token 则加密保存
   if (token) {
     updateData.token = encrypt(token)
   }
 
+  // 构建更新操作
+  const updateOps: Record<string, unknown> = {
+    $set: updateData,
+    $setOnInsert: {
+      createdAt: new Date()
+    }
+  }
+
+  // 只有明确要求清除 Token 时才删除（切换到公开仓库）
+  // 如果只是没有填写 Token，则保留原有 Token
+  if (clearToken && !token) {
+    updateOps.$unset = { token: '' }
+  }
+
   await db.collection('git_config').updateOne(
     { userId },
-    {
-      $set: updateData,
-      $setOnInsert: {
-        createdAt: new Date()
-      }
-    },
+    updateOps,
     { upsert: true }
   )
 }

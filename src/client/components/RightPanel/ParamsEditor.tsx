@@ -26,9 +26,9 @@ function SegmentedControl({ options, value, onChange }: SegmentedControlProps) {
   return (
     <div style={{
       display: 'inline-flex',
-      background: t.bgMuted,
+      border: `1px solid ${t.border}`,
       borderRadius: 8,
-      padding: 3,
+      padding: 2,
     }}>
       {options.map(opt => (
         <button
@@ -171,7 +171,6 @@ function FormDataEditor({ type, data, onAdd, onUpdate, onRemove }: FormDataEdito
 
   return (
     <div style={{
-      background: t.bgCard,
       borderRadius: 8,
       border: `1px solid ${t.border}`,
       overflow: 'hidden',
@@ -179,9 +178,8 @@ function FormDataEditor({ type, data, onAdd, onUpdate, onRemove }: FormDataEdito
       {/* 表头 */}
       <div style={{
         display: 'flex',
-        borderBottom: `1px solid ${t.borderLight}`,
+        borderBottom: `1px solid ${t.border}`,
         padding: '8px 0',
-        background: t.bgMuted,
       }}>
         <div style={{
           flex: 1,
@@ -366,7 +364,7 @@ export function ParamsEditor({
     fontSize: 13,
     lineHeight: 1.6,
     padding: 12,
-    background: t.bgCard,
+    background: 'transparent',
     borderColor: t.border,
     borderRadius: 8,
     resize: 'vertical' as const,
@@ -375,10 +373,8 @@ export function ParamsEditor({
 
   return (
     <div style={{
-      background: t.bgCard,
       borderRadius: 10,
       border: `1px solid ${t.border}`,
-      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
       overflow: 'hidden',
     }}>
       {/* Tab 导航 */}

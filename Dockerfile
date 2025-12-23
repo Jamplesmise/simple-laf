@@ -28,8 +28,8 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Install git (for Git sync) and global tools
-RUN apk add --no-cache git && npm install -g typescript typescript-language-server
+# Install git (for Git sync) and global tools (including pnpm for runtime dependency installation)
+RUN apk add --no-cache git && npm install -g pnpm typescript typescript-language-server
 
 # Copy package.json for module resolution
 COPY package.json ./

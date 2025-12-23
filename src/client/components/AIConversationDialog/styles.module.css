@@ -44,10 +44,28 @@
 
 .sidebar {
   width: 288px;
+  min-width: 180px;
+  flex-shrink: 1;
   display: flex;
   flex-direction: column;
   background: rgba(248, 250, 252, 0.5);
   border-right: 1px solid #f1f5f9;
+  overflow: hidden;
+}
+
+/* 小屏幕响应式 - 收缩侧边栏 */
+@media (max-width: 900px) {
+  .sidebar {
+    width: 220px;
+    min-width: 160px;
+  }
+}
+
+@media (max-width: 700px) {
+  .sidebar {
+    width: 180px;
+    min-width: 140px;
+  }
 }
 
 .sidebarHeader {
@@ -164,10 +182,12 @@
 
 .main {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   background: #fff;
   position: relative;
+  overflow: hidden;
 }
 
 /* ============================================
@@ -175,16 +195,18 @@
    ============================================ */
 
 .headerToolbar {
-  height: 64px;
-  padding: 0 24px;
+  min-height: 64px;
+  padding: 12px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   border-bottom: 1px solid #f1f5f9;
   background: #fff;
   position: sticky;
   top: 0;
   z-index: 10;
+  flex-wrap: wrap;
 }
 
 .headerLeft {
@@ -193,7 +215,15 @@
   gap: 8px;
   flex: 1;
   min-width: 0;
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: visible;
+  /* 隐藏滚动条但保持可滚动 */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.headerLeft::-webkit-scrollbar {
+  display: none;
 }
 
 .headerDivider {
@@ -207,6 +237,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 /* 下拉选择器按钮 */
@@ -370,7 +401,9 @@
 
 .messageArea {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 24px;
 }
 
@@ -792,47 +825,52 @@
    ============================================ */
 
 .inputArea {
-  padding: 20px 24px;
-  border-top: 1px solid #f1f5f9;
+  padding: 16px 24px 20px;
   background: #fff;
+  display: flex;
+  justify-content: center;
 }
 
 .inputWrapper {
   display: flex;
   flex-direction: column;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
+  width: 100%;
+  max-width: 800px;
+  border: 1px solid #e5e7eb;
+  border-radius: 24px;
+  background: #f9fafb;
   overflow: hidden;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  position: relative;
 }
 
 .inputWrapper:focus-within {
-  border-color: var(--emerald-600);
-  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+  border-color: #d1d5db;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .inputTags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 12px 14px;
-  border-bottom: 1px solid #f1f5f9;
+  gap: 6px;
+  padding: 10px 16px 0;
 }
 
 .inputTagsEmpty {
-  border-bottom: none;
+  display: none;
 }
 
 .inputMain {
   display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  padding: 14px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 10px 16px;
 }
 
 .textarea {
   flex: 1;
-  min-height: 28px;
+  min-height: 24px;
   max-height: 200px;
   resize: none;
   border: none;
@@ -845,31 +883,32 @@
 }
 
 .textarea::placeholder {
-  color: var(--slate-400);
+  color: #9ca3af;
 }
 
 .sendButton {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   border: none;
-  background: var(--emerald-600);
-  color: white;
+  background: #e5e7eb;
+  color: #6b7280;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 14px;
   transition: all 0.15s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 }
 
 .sendButton:hover {
-  background: var(--emerald-700);
+  background: #d1d5db;
+  color: #374151;
 }
 
 .sendButton:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -1117,13 +1156,36 @@
   color: #e2e8f0;
 }
 
+:global(.dark) .inputArea {
+  background: #1e293b;
+}
+
 :global(.dark) .inputWrapper {
-  border-color: #334155;
-  background: #0f172a;
+  border-color: #374151;
+  background: #1f2937;
+}
+
+:global(.dark) .inputWrapper:focus-within {
+  border-color: #4b5563;
+  background: #111827;
 }
 
 :global(.dark) .textarea {
   color: #e2e8f0;
+}
+
+:global(.dark) .textarea::placeholder {
+  color: #6b7280;
+}
+
+:global(.dark) .sendButton {
+  background: #374151;
+  color: #9ca3af;
+}
+
+:global(.dark) .sendButton:hover {
+  background: #4b5563;
+  color: #d1d5db;
 }
 
 :global(.dark) .codeContent {

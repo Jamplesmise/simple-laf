@@ -45,7 +45,7 @@ router.get('/config', async (req: AuthRequest, res) => {
 
 // 保存 Git 配置
 router.put('/config', async (req: AuthRequest, res) => {
-  const { repoUrl, branch, token, functionsPath } = req.body
+  const { repoUrl, branch, token, functionsPath, clearToken } = req.body
 
   if (!repoUrl || !branch || !functionsPath) {
     res.status(400).json({
@@ -72,7 +72,8 @@ router.put('/config', async (req: AuthRequest, res) => {
       repoUrl,
       branch,
       token,
-      functionsPath
+      functionsPath,
+      clearToken === true  // 明确要求清除 Token
     )
     res.json({ success: true })
   } catch (err) {
@@ -86,10 +87,13 @@ router.put('/config', async (req: AuthRequest, res) => {
 
 // 预览拉取
 router.get('/preview-pull', async (req: AuthRequest, res) => {
+  console.log('[Git Route] GET /preview-pull', { userId: req.user!.userId })
   try {
     const preview = await gitService.previewPull(new ObjectId(req.user!.userId))
+    console.log('[Git Route] preview-pull 成功', { changesCount: preview.changes.length })
     res.json({ success: true, data: preview })
   } catch (err) {
+    console.error('[Git Route] preview-pull 失败', err)
     const message = err instanceof Error ? err.message : '预览失败'
     res.status(400).json({
       success: false,
@@ -100,10 +104,13 @@ router.get('/preview-pull', async (req: AuthRequest, res) => {
 
 // 预览推送
 router.get('/preview-push', async (req: AuthRequest, res) => {
+  console.log('[Git Route] GET /preview-push', { userId: req.user!.userId })
   try {
     const preview = await gitService.previewPush(new ObjectId(req.user!.userId))
+    console.log('[Git Route] preview-push 成功', { changesCount: preview.changes.length })
     res.json({ success: true, data: preview })
   } catch (err) {
+    console.error('[Git Route] preview-push 失败', err)
     const message = err instanceof Error ? err.message : '预览失败'
     res.status(400).json({
       success: false,
@@ -167,24 +174,30 @@ router.post('/pull', async (req: AuthRequest, res) => {
 // 推送到 Git (支持选择性推送)
 router.post('/push', async (req: AuthRequest, res) => {
   const { message, functions } = req.body
+  console.log('[Git Route] POST /push 收到请求', { message, functions, userId: req.user!.userId })
 
   try {
     if (functions && Array.isArray(functions) && functions.length > 0) {
       // 选择性推送
+      console.log('[Git Route] 开始选择性推送', { count: functions.length })
       await gitService.selectivePush(
         new ObjectId(req.user!.userId),
         functions,
         message || 'Update functions from Simple IDE'
       )
+      console.log('[Git Route] 选择性推送完成')
     } else {
       // 全量推送
+      console.log('[Git Route] 开始全量推送')
       await gitService.pushToGit(
         new ObjectId(req.user!.userId),
         message || 'Update functions from Simple IDE'
       )
+      console.log('[Git Route] 全量推送完成')
     }
     res.json({ success: true })
   } catch (err) {
+    console.error('[Git Route] 推送失败', err)
     const errMessage = err instanceof Error ? err.message : '推送失败'
     res.status(400).json({
       success: false,

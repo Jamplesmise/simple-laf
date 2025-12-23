@@ -25,6 +25,7 @@ export function ModelModal({ open, providerId, model, onClose, onSuccess }: Mode
         alias: model.alias,
         temperature: model.temperature,
         maxTokens: model.maxTokens,
+        contextLimit: model.contextLimit || 128000,
         inputPrice: model.pricing?.inputPricePerMillion,
         outputPrice: model.pricing?.outputPricePerMillion,
         currency: model.pricing?.currency || 'USD',
@@ -34,6 +35,7 @@ export function ModelModal({ open, providerId, model, onClose, onSuccess }: Mode
         alias: '',
         temperature: 0.7,
         maxTokens: 4096,
+        contextLimit: 128000,
         inputPrice: 0,
         outputPrice: 0,
         currency: 'USD',
@@ -60,6 +62,7 @@ export function ModelModal({ open, providerId, model, onClose, onSuccess }: Mode
         alias: values.alias,
         temperature: values.temperature,
         maxTokens: values.maxTokens,
+        contextLimit: values.contextLimit,
         pricing,
         supportsThinking: values.supportsThinking || false,
       }
@@ -112,10 +115,13 @@ export function ModelModal({ open, providerId, model, onClose, onSuccess }: Mode
           <Form.Item name="temperature" label="温度" style={{ flex: 1 }}>
             <InputNumber min={0} max={2} step={0.1} style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="maxTokens" label="最大 Token" style={{ flex: 1 }}>
+          <Form.Item name="maxTokens" label="输出上限" style={{ flex: 1 }} tooltip="单次生成的最大 Token 数">
             <InputNumber min={1} max={200000} style={{ width: '100%' }} />
           </Form.Item>
         </div>
+        <Form.Item name="contextLimit" label="上下文窗口" tooltip="模型支持的最大上下文长度（如 GPT-4o 为 128K，Claude 3 为 200K）">
+          <InputNumber min={1000} max={2000000} step={1000} style={{ width: '100%' }} addonAfter="tokens" />
+        </Form.Item>
         <div style={{
           padding: '12px',
           background: isDark ? '#1a1a1a' : '#f5f5f5',

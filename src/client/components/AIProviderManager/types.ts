@@ -19,6 +19,7 @@ export interface ModelFormValues {
   alias: string
   temperature: number
   maxTokens: number
+  contextLimit: number
   inputPrice?: number
   outputPrice?: number
   currency: string

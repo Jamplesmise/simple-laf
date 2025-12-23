@@ -32,7 +32,8 @@ export interface AIModel {
   name: string        // 实际模型 ID (如 gpt-4)
   alias: string       // 显示名称 (如 GPT-4 Turbo)
   temperature: number
-  maxTokens: number
+  maxTokens: number   // 单次输出上限
+  contextLimit?: number // 上下文窗口大小（如 128000）
   pricing?: ModelPricing // 定价信息
   supportsThinking?: boolean // 是否支持深度思考模式
   isDefault: boolean
@@ -79,6 +80,7 @@ export interface CreateModelInput {
   alias: string
   temperature?: number
   maxTokens?: number
+  contextLimit?: number  // 上下文窗口大小
   pricing?: ModelPricing
   supportsThinking?: boolean
   isDefault?: boolean
@@ -90,6 +92,7 @@ export interface UpdateModelInput {
   alias?: string
   temperature?: number
   maxTokens?: number
+  contextLimit?: number  // 上下文窗口大小
   pricing?: ModelPricing
   supportsThinking?: boolean
   isDefault?: boolean
@@ -115,25 +118,25 @@ export const DEFAULT_PROVIDERS: Omit<CreateProviderInput, 'isDefault'>[] = [
 ]
 
 // 默认模型配置 (定价基于 2025 年初公开价格)
-// maxTokens: 单次输出上限，2025年主流模型支持 16K-64K 输出
+// maxTokens: 单次输出上限，contextLimit: 上下文窗口大小
 export const DEFAULT_MODELS: Record<ProviderType, Omit<CreateModelInput, 'isDefault'>[]> = {
   openai: [
-    { name: 'gpt-4o', alias: 'GPT-4o', temperature: 0.7, maxTokens: 16384, pricing: { inputPricePerMillion: 2.5, outputPricePerMillion: 10, currency: 'USD' } },
-    { name: 'gpt-4o-mini', alias: 'GPT-4o Mini', temperature: 0.7, maxTokens: 16384, pricing: { inputPricePerMillion: 0.15, outputPricePerMillion: 0.6, currency: 'USD' } },
-    { name: 'gpt-4-turbo', alias: 'GPT-4 Turbo', temperature: 0.7, maxTokens: 16384, pricing: { inputPricePerMillion: 10, outputPricePerMillion: 30, currency: 'USD' } },
-    { name: 'gpt-3.5-turbo', alias: 'GPT-3.5 Turbo', temperature: 0.7, maxTokens: 16384, pricing: { inputPricePerMillion: 0.5, outputPricePerMillion: 1.5, currency: 'USD' } },
+    { name: 'gpt-4o', alias: 'GPT-4o', temperature: 0.7, maxTokens: 16384, contextLimit: 128000, pricing: { inputPricePerMillion: 2.5, outputPricePerMillion: 10, currency: 'USD' } },
+    { name: 'gpt-4o-mini', alias: 'GPT-4o Mini', temperature: 0.7, maxTokens: 16384, contextLimit: 128000, pricing: { inputPricePerMillion: 0.15, outputPricePerMillion: 0.6, currency: 'USD' } },
+    { name: 'gpt-4-turbo', alias: 'GPT-4 Turbo', temperature: 0.7, maxTokens: 16384, contextLimit: 128000, pricing: { inputPricePerMillion: 10, outputPricePerMillion: 30, currency: 'USD' } },
+    { name: 'gpt-3.5-turbo', alias: 'GPT-3.5 Turbo', temperature: 0.7, maxTokens: 16384, contextLimit: 16385, pricing: { inputPricePerMillion: 0.5, outputPricePerMillion: 1.5, currency: 'USD' } },
   ],
   anthropic: [
-    { name: 'claude-sonnet-4-20250514', alias: 'Claude Sonnet 4', temperature: 0.7, maxTokens: 16384, pricing: { inputPricePerMillion: 3, outputPricePerMillion: 15, currency: 'USD' } },
-    { name: 'claude-3-5-sonnet-20241022', alias: 'Claude 3.5 Sonnet', temperature: 0.7, maxTokens: 16384, pricing: { inputPricePerMillion: 3, outputPricePerMillion: 15, currency: 'USD' } },
-    { name: 'claude-3-opus-20240229', alias: 'Claude 3 Opus', temperature: 0.7, maxTokens: 16384, pricing: { inputPricePerMillion: 15, outputPricePerMillion: 75, currency: 'USD' } },
-    { name: 'claude-3-haiku-20240307', alias: 'Claude 3 Haiku', temperature: 0.7, maxTokens: 16384, pricing: { inputPricePerMillion: 0.25, outputPricePerMillion: 1.25, currency: 'USD' } },
+    { name: 'claude-sonnet-4-20250514', alias: 'Claude Sonnet 4', temperature: 0.7, maxTokens: 16384, contextLimit: 200000, pricing: { inputPricePerMillion: 3, outputPricePerMillion: 15, currency: 'USD' } },
+    { name: 'claude-3-5-sonnet-20241022', alias: 'Claude 3.5 Sonnet', temperature: 0.7, maxTokens: 16384, contextLimit: 200000, pricing: { inputPricePerMillion: 3, outputPricePerMillion: 15, currency: 'USD' } },
+    { name: 'claude-3-opus-20240229', alias: 'Claude 3 Opus', temperature: 0.7, maxTokens: 16384, contextLimit: 200000, pricing: { inputPricePerMillion: 15, outputPricePerMillion: 75, currency: 'USD' } },
+    { name: 'claude-3-haiku-20240307', alias: 'Claude 3 Haiku', temperature: 0.7, maxTokens: 16384, contextLimit: 200000, pricing: { inputPricePerMillion: 0.25, outputPricePerMillion: 1.25, currency: 'USD' } },
   ],
   ollama: [
-    { name: 'llama3.3', alias: 'Llama 3.3 70B', temperature: 0.7, maxTokens: 16384, pricing: { inputPricePerMillion: 0, outputPricePerMillion: 0, currency: 'USD' } },
-    { name: 'qwen2.5', alias: 'Qwen 2.5', temperature: 0.7, maxTokens: 16384, pricing: { inputPricePerMillion: 0, outputPricePerMillion: 0, currency: 'USD' } },
-    { name: 'deepseek-r1', alias: 'DeepSeek R1', temperature: 0.7, maxTokens: 16384, pricing: { inputPricePerMillion: 0, outputPricePerMillion: 0, currency: 'USD' } },
-    { name: 'codellama', alias: 'Code Llama', temperature: 0.7, maxTokens: 16384, pricing: { inputPricePerMillion: 0, outputPricePerMillion: 0, currency: 'USD' } },
+    { name: 'llama3.3', alias: 'Llama 3.3 70B', temperature: 0.7, maxTokens: 16384, contextLimit: 128000, pricing: { inputPricePerMillion: 0, outputPricePerMillion: 0, currency: 'USD' } },
+    { name: 'qwen2.5', alias: 'Qwen 2.5', temperature: 0.7, maxTokens: 16384, contextLimit: 131072, pricing: { inputPricePerMillion: 0, outputPricePerMillion: 0, currency: 'USD' } },
+    { name: 'deepseek-r1', alias: 'DeepSeek R1', temperature: 0.7, maxTokens: 16384, contextLimit: 128000, pricing: { inputPricePerMillion: 0, outputPricePerMillion: 0, currency: 'USD' }, supportsThinking: true },
+    { name: 'codellama', alias: 'Code Llama', temperature: 0.7, maxTokens: 16384, contextLimit: 16384, pricing: { inputPricePerMillion: 0, outputPricePerMillion: 0, currency: 'USD' } },
   ],
   custom: [],
 }
@@ -355,6 +358,7 @@ export async function createModel(
     alias: input.alias,
     temperature: input.temperature ?? 0.7,
     maxTokens: input.maxTokens ?? 4096,
+    contextLimit: input.contextLimit ?? 128000,  // 默认 128K 上下文
     pricing: input.pricing,
     supportsThinking: input.supportsThinking ?? false,
     isDefault: input.isDefault || false,
@@ -391,6 +395,7 @@ export async function updateModel(
   if (input.alias !== undefined) updateData.alias = input.alias
   if (input.temperature !== undefined) updateData.temperature = input.temperature
   if (input.maxTokens !== undefined) updateData.maxTokens = input.maxTokens
+  if (input.contextLimit !== undefined) updateData.contextLimit = input.contextLimit
   if (input.pricing !== undefined) updateData.pricing = input.pricing
   if (input.supportsThinking !== undefined) updateData.supportsThinking = input.supportsThinking
   if (input.isDefault !== undefined) updateData.isDefault = input.isDefault

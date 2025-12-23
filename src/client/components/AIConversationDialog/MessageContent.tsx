@@ -19,7 +19,7 @@ import {
   EditFilled, DeleteFilled, BulbOutlined, DownOutlined, RightOutlined,
   SwapOutlined, BugOutlined, QuestionCircleOutlined,
   SplitCellsOutlined, MergeCellsOutlined, ToolOutlined, EyeOutlined,
-  FileOutlined, CodeOutlined
+  FileOutlined, CodeOutlined, GlobalOutlined
 } from '@ant-design/icons'
 import { useThemeColors } from '@/hooks/useTheme'
 import { parseAIResponse, codeFont, type AIOperation } from './utils'
@@ -94,6 +94,7 @@ function ThinkingBlock({ content }: { content: string }) {
 function OperationCard({ operation }: { operation: AIOperation }) {
   const [expanded, setExpanded] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
   const { isDark, t } = useThemeColors()
 
   // 操作类型配置
@@ -157,6 +158,31 @@ function OperationCard({ operation }: { operation: AIOperation }) {
       colorClass: styles.operationIconMerge,
       color: '#F97316',
     },
+    // 站点文件操作
+    site_create: {
+      icon: <GlobalOutlined />,
+      label: '创建站点文件',
+      colorClass: styles.operationIconCreate,
+      color: '#10B981',
+    },
+    site_update: {
+      icon: <GlobalOutlined />,
+      label: '更新站点文件',
+      colorClass: styles.operationIconUpdate,
+      color: '#3B82F6',
+    },
+    site_delete: {
+      icon: <GlobalOutlined />,
+      label: '删除站点文件',
+      colorClass: styles.operationIconDelete,
+      color: '#EF4444',
+    },
+    site_folder: {
+      icon: <FolderAddOutlined />,
+      label: '创建站点文件夹',
+      colorClass: styles.operationIconCreate,
+      color: '#F59E0B',
+    },
   }
 
   const config = operationConfig[operation.type] || {
@@ -170,6 +196,11 @@ function OperationCard({ operation }: { operation: AIOperation }) {
 
   // 获取文件名/函数名
   const fileName = operation.name || (operation.functionId ? `函数 ${operation.functionId.slice(-6)}` : null)
+
+  // 判断是否为可预览的站点文件
+  const isSiteOperation = operation.type.startsWith('site_')
+  const isHTMLFile = fileName?.toLowerCase().endsWith('.html') || fileName?.toLowerCase().endsWith('.htm')
+  const isPreviewable = isSiteOperation && isHTMLFile && hasCode
 
   // 代码预览（前5行）
   const getCodePreview = () => {
@@ -261,6 +292,20 @@ function OperationCard({ operation }: { operation: AIOperation }) {
         <div className={styles.artifactActions}>
           {hasCode && (
             <>
+              {isPreviewable && (
+                <Tooltip title={showPreview ? '查看代码' : '预览'}>
+                  <button
+                    className={styles.artifactAction}
+                    onClick={(e) => { e.stopPropagation(); setShowPreview(!showPreview) }}
+                    style={{
+                      background: showPreview ? `${config.color}20` : undefined,
+                      color: showPreview ? config.color : undefined,
+                    }}
+                  >
+                    {showPreview ? <CodeOutlined /> : <EyeOutlined />}
+                  </button>
+                </Tooltip>
+              )}
               <Tooltip title={copied ? '已复制' : '复制代码'}>
                 <button
                   className={styles.artifactAction}
@@ -286,8 +331,15 @@ function OperationCard({ operation }: { operation: AIOperation }) {
         </div>
       </div>
 
+      {/* HTML 预览区域 */}
+      {showPreview && isPreviewable && (
+        <div style={{ padding: 12 }}>
+          <HTMLPreview html={operation.code!} height={350} />
+        </div>
+      )}
+
       {/* 代码预览区域 */}
-      {hasCode && !expanded && (
+      {hasCode && !expanded && !showPreview && (
         <div
           className={styles.artifactPreview}
           onClick={handleToggle}
@@ -304,7 +356,7 @@ function OperationCard({ operation }: { operation: AIOperation }) {
       )}
 
       {/* 完整代码区域 */}
-      {hasCode && expanded && (
+      {hasCode && expanded && !showPreview && (
         <div
           className={styles.artifactCode}
           style={{ background: isDark ? '#0d1117' : '#f6f8fa' }}

@@ -14,12 +14,20 @@ export function encrypt(text: string): string {
 
 // 解密
 export function decrypt(ciphertext: string): string {
-  const algorithm = 'aes-256-cbc'
-  const key = crypto.scryptSync(config.jwtSecret, 'salt', 32)
-  const [ivHex, encrypted] = ciphertext.split(':')
-  const iv = Buffer.from(ivHex, 'hex')
-  const decipher = crypto.createDecipheriv(algorithm, key, iv)
-  let decrypted = decipher.update(encrypted, 'hex', 'utf8')
-  decrypted += decipher.final('utf8')
-  return decrypted
+  try {
+    const algorithm = 'aes-256-cbc'
+    const key = crypto.scryptSync(config.jwtSecret, 'salt', 32)
+    const [ivHex, encrypted] = ciphertext.split(':')
+    if (!ivHex || !encrypted) {
+      throw new Error('Invalid ciphertext format')
+    }
+    const iv = Buffer.from(ivHex, 'hex')
+    const decipher = crypto.createDecipheriv(algorithm, key, iv)
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8')
+    decrypted += decipher.final('utf8')
+    return decrypted
+  } catch (err) {
+    console.error('[Git Crypto] 解密失败，可能是 JWT_SECRET 变更或 Token 损坏:', err)
+    throw new Error('Token 解密失败，请重新配置 Git Token')
+  }
 }

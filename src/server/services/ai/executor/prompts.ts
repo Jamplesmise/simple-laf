@@ -48,6 +48,7 @@ export default async function (ctx: FunctionContext) {
 **cloud SDK 提供：**
 - \`cloud.database()\`: 获取 MongoDB 数据库实例
 - \`cloud.fetch(url, options)\`: 发起 HTTP 请求
+- \`cloud.env.变量名\`: 获取用户环境变量（如 \`cloud.env.API_KEY\`）
 
 **导入其他云函数：**
 使用 \`@/函数名\` 或 \`@/函数路径\` 导入其他函数：
@@ -220,6 +221,7 @@ export default async function (ctx: FunctionContext) {
 **cloud SDK 提供：**
 - \`cloud.database()\`: 获取 MongoDB 数据库实例
 - \`cloud.fetch(url, options)\`: 发起 HTTP 请求
+- \`cloud.env.变量名\`: 获取用户环境变量（如 \`cloud.env.API_KEY\`）
 
 **导入其他云函数：**
 使用 \`@/函数名\` 或 \`@/函数路径\` 直接导入：

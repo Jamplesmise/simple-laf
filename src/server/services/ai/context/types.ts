@@ -93,22 +93,34 @@ export interface ModelContextLimits {
 
 // 默认模型上下文限制
 export const DEFAULT_CONTEXT_LIMITS: Record<string, number> = {
+  // OpenAI
   'gpt-4': 8192,
   'gpt-4-turbo': 128000,
   'gpt-4o': 128000,
   'gpt-4o-mini': 128000,
   'gpt-3.5-turbo': 16385,
+  // Claude
   'claude-3-opus': 200000,
   'claude-3-sonnet': 200000,
   'claude-3-haiku': 200000,
   'claude-3-5-sonnet': 200000,
   'claude-3-5-haiku': 200000,
+  'claude-4': 200000,
+  // DeepSeek
   'deepseek-chat': 64000,
   'deepseek-coder': 64000,
+  'deepseek-v3': 128000,
+  'deepseek-r1': 128000,
+  'deepseek': 128000,  // 通用匹配
+  // 阿里云通义
   'qwen-turbo': 131072,
   'qwen-plus': 131072,
   'qwen-max': 32768,
+  'qwen': 131072,  // 通用匹配
 }
+
+// 默认上下文限制（当模型不匹配时使用）
+export const DEFAULT_MAX_TOKENS = 128000
 
 // 默认输出预留
 export const DEFAULT_OUTPUT_RESERVE = 4096

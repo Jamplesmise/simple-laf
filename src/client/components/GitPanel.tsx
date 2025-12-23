@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
-import { Button, Space, Modal, Input, Form, message, Tooltip } from 'antd'
+import { Button, Space, Modal, Input, Form, message, Tooltip, Tabs, Alert } from 'antd'
 import {
   GithubOutlined,
   CloudDownloadOutlined,
   CloudUploadOutlined,
   SettingOutlined,
   CheckCircleOutlined,
+  LockOutlined,
+  UnlockOutlined,
 } from '@ant-design/icons'
 import { gitApi, type GitConfig, type SyncChange } from '../api/git'
 import { useThemeStore } from '../stores/theme'
@@ -29,6 +31,7 @@ export default function GitPanel({ onSynced }: GitPanelProps) {
   const [config, setConfig] = useState<GitConfig | null>(null)
   const [loading, setLoading] = useState(true)
   const [configModalOpen, setConfigModalOpen] = useState(false)
+  const [repoType, setRepoType] = useState<'public' | 'private'>('public')
   const [form] = Form.useForm()
   const mode = useThemeStore((state) => state.mode)
   const isDark = mode === 'dark'
@@ -63,7 +66,18 @@ export default function GitPanel({ onSynced }: GitPanelProps) {
   const handleSaveConfig = async () => {
     try {
       const values = await form.validateFields()
-      await gitApi.saveConfig(values)
+
+      // 私有仓库必须填写 token（除非已有 token 保存）
+      if (repoType === 'private' && !values.token && !config?.hasToken) {
+        message.error('私有仓库必须填写访问令牌')
+        return
+      }
+
+      await gitApi.saveConfig({
+        ...values,
+        // 切换到公开仓库时，明确要求清除 Token
+        clearToken: repoType === 'public'
+      })
       message.success('配置已保存')
       setConfigModalOpen(false)
       loadConfig()
@@ -122,22 +136,28 @@ export default function GitPanel({ onSynced }: GitPanelProps) {
 
   // 确认同步
   const handleConfirmSync = async (selectedFunctions: string[], commitMessage?: string) => {
+    console.log('[GitPanel] handleConfirmSync 开始', { syncMode, selectedFunctions, commitMessage })
     setSyncing(true)
     try {
       if (syncMode === 'pull') {
+        console.log('[GitPanel] 开始拉取', { functions: selectedFunctions })
         const res = await gitApi.pull(selectedFunctions)
+        console.log('[GitPanel] 拉取响应', res.data)
         if (res.data.success) {
           const { added, updated } = res.data.data
           message.success(`拉取成功：新增 ${added.length} 个，更新 ${updated.length} 个`)
         }
       } else {
-        await gitApi.push(commitMessage, selectedFunctions)
+        console.log('[GitPanel] 开始推送', { message: commitMessage, functions: selectedFunctions })
+        const res = await gitApi.push(commitMessage, selectedFunctions)
+        console.log('[GitPanel] 推送响应', res)
         message.success('推送成功')
       }
       setSyncDialogOpen(false)
       loadConfig()
       onSynced?.()
     } catch (error: unknown) {
+      console.error('[GitPanel] 同步失败', error)
       const err = error as { response?: { data?: { error?: { message?: string } } } }
       message.error(err.response?.data?.error?.message || (syncMode === 'pull' ? '拉取失败' : '推送失败'))
     } finally {
@@ -222,6 +242,8 @@ export default function GitPanel({ onSynced }: GitPanelProps) {
                     branch: config.branch,
                     functionsPath: config.functionsPath,
                   })
+                  // 根据是否有 Token 设置仓库类型
+                  setRepoType(config.hasToken ? 'private' : 'public')
                   setConfigModalOpen(true)
                 }}
                 style={{ borderRadius: 6 }}
@@ -260,8 +282,51 @@ export default function GitPanel({ onSynced }: GitPanelProps) {
         cancelText="取消"
         destroyOnClose
         zIndex={1100}
+        width={520}
       >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+        <Tabs
+          activeKey={repoType}
+          onChange={(key) => setRepoType(key as 'public' | 'private')}
+          items={[
+            {
+              key: 'public',
+              label: (
+                <span>
+                  <UnlockOutlined style={{ marginRight: 6 }} />
+                  公开仓库
+                </span>
+              ),
+            },
+            {
+              key: 'private',
+              label: (
+                <span>
+                  <LockOutlined style={{ marginRight: 6 }} />
+                  私有仓库
+                </span>
+              ),
+            },
+          ]}
+          style={{ marginBottom: 8 }}
+        />
+
+        {repoType === 'private' && (
+          <Alert
+            type="info"
+            showIcon
+            message="私有仓库认证说明"
+            description={
+              <div style={{ fontSize: 12 }}>
+                <div><strong>GitHub:</strong> 使用 Personal Access Token (ghp_xxx)</div>
+                <div><strong>GitLab:</strong> 使用 Personal Access Token (glpat-xxx)，需要 api 和 read_repository 权限</div>
+                <div><strong>私有部署:</strong> 填写完整 HTTPS URL，如 https://gitlab.company.com/group/repo.git</div>
+              </div>
+            }
+            style={{ marginBottom: 16 }}
+          />
+        )}
+
+        <Form form={form} layout="vertical">
           <Form.Item
             name="repoUrl"
             label="仓库地址"
@@ -270,8 +335,15 @@ export default function GitPanel({ onSynced }: GitPanelProps) {
               { type: 'url', message: '请输入有效的 URL' },
             ]}
           >
-            <Input placeholder="https://github.com/username/repo.git" />
+            <Input
+              prefix={<GithubOutlined style={{ color: '#999' }} />}
+              placeholder={repoType === 'private'
+                ? "https://gitlab.company.com/group/repo.git"
+                : "https://github.com/username/repo.git"
+              }
+            />
           </Form.Item>
+
           <Form.Item
             name="branch"
             label="分支"
@@ -279,13 +351,21 @@ export default function GitPanel({ onSynced }: GitPanelProps) {
           >
             <Input placeholder="main" />
           </Form.Item>
-          <Form.Item
-            name="token"
-            label="访问令牌"
-            extra="私有仓库需要填写 Personal Access Token"
-          >
-            <Input.Password placeholder="ghp_xxxx（可选）" />
-          </Form.Item>
+
+          {repoType === 'private' && (
+            <Form.Item
+              name="token"
+              label="访问令牌"
+              rules={config?.hasToken ? [] : [{ required: true, message: '私有仓库必须填写访问令牌' }]}
+              extra={config?.hasToken
+                ? "已保存 Token，留空则保留原有 Token，填写则更新为新 Token"
+                : "Personal Access Token，用于克隆和推送代码"
+              }
+            >
+              <Input.Password placeholder={config?.hasToken ? "留空保留原有 Token" : "ghp_xxx 或 glpat-xxx"} />
+            </Form.Item>
+          )}
+
           <Form.Item
             name="functionsPath"
             label="函数目录"

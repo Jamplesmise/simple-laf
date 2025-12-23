@@ -65,31 +65,32 @@ export default function GitSyncDialog({
   // 全选/取消全选
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelected(new Set(changes.map((c) => c.name)))
+      setSelected(new Set(changes.map((c) => c.path)))
     } else {
       setSelected(new Set())
     }
   }
 
-  // 单个选择
-  const handleSelect = (name: string, checked: boolean) => {
+  // 单个选择 (使用 path 作为唯一标识)
+  const handleSelect = (path: string, checked: boolean) => {
     const newSelected = new Set(selected)
     if (checked) {
-      newSelected.add(name)
+      newSelected.add(path)
     } else {
-      newSelected.delete(name)
+      newSelected.delete(path)
     }
     setSelected(newSelected)
   }
 
   // 切换 diff 展开
-  const toggleDiff = (name: string) => {
-    setExpandedDiff(expandedDiff === name ? null : name)
+  const toggleDiff = (path: string) => {
+    setExpandedDiff(expandedDiff === path ? null : path)
   }
 
   // 确认同步
   const handleConfirm = () => {
     const selectedList = Array.from(selected)
+    console.log('[GitSyncDialog] handleConfirm 被调用', { selectedList, mode, commitMessage })
     onConfirm(selectedList, mode === 'push' ? commitMessage : undefined)
   }
 
@@ -191,7 +192,7 @@ export default function GitSyncDialog({
             }}
           >
             {changes.map((change) => (
-              <div key={change.name}>
+              <div key={change.path}>
                 <div
                   style={{
                     padding: '10px 12px',
@@ -203,8 +204,8 @@ export default function GitSyncDialog({
                   }}
                 >
                   <Checkbox
-                    checked={selected.has(change.name)}
-                    onChange={(e) => handleSelect(change.name, e.target.checked)}
+                    checked={selected.has(change.path)}
+                    onChange={(e) => handleSelect(change.path, e.target.checked)}
                   />
                   {getStatusIcon(change.status)}
                   <span
@@ -215,23 +216,23 @@ export default function GitSyncDialog({
                       color: isDark ? '#e0e0e0' : '#333',
                     }}
                   >
-                    {change.name}
+                    {change.path}
                   </span>
                   {getStatusTag(change.status)}
                   {(change.status === 'modified' || change.status === 'conflict') && (
                     <Button
                       type="text"
                       size="small"
-                      onClick={() => toggleDiff(change.name)}
+                      onClick={() => toggleDiff(change.path)}
                       style={{ fontSize: 12, color: '#00a9a6' }}
                     >
-                      {expandedDiff === change.name ? '收起' : '查看差异'}
+                      {expandedDiff === change.path ? '收起' : '查看差异'}
                     </Button>
                   )}
                 </div>
 
                 {/* Diff 展开区域 */}
-                {expandedDiff === change.name && (change.localCode || change.remoteCode) && (
+                {expandedDiff === change.path && (change.localCode || change.remoteCode) && (
                   <div
                     style={{
                       padding: 12,
