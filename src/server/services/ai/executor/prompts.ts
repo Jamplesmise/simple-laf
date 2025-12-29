@@ -46,9 +46,21 @@ export default async function (ctx: FunctionContext) {
 - \`ctx.method\`: HTTP 方法 (GET/POST/PUT/DELETE 等)
 
 **cloud SDK 提供：**
-- \`cloud.database()\`: 获取 MongoDB 数据库实例
+- \`cloud.database()\`: 获取**系统数据库**（平台内部数据，一般不直接使用）
 - \`cloud.fetch(url, options)\`: 发起 HTTP 请求
-- \`cloud.env.变量名\`: 获取用户环境变量（如 \`cloud.env.API_KEY\`）
+- \`cloud.env.变量名\`: 获取用户环境变量（如 \`cloud.env.MONGO_URL\`）
+
+**连接外部数据库：**
+用户的业务数据通常存储在外部数据库，需要使用 MongoClient 连接：
+\`\`\`typescript
+import { MongoClient } from 'mongodb'
+const client = new MongoClient(cloud.env.MONGO_URL)
+await client.connect()
+const db = client.db('数据库名')  // 从环境变量或用户需求中获取
+// ... 操作数据
+await client.close()  // 用完必须关闭
+\`\`\`
+**重要**：开发数据库功能前，先用 \`list_env_variables\` 查看用户的环境变量配置。
 
 **导入其他云函数：**
 使用 \`@/函数名\` 或 \`@/函数路径\` 导入其他函数：
@@ -91,12 +103,65 @@ import validateInput from '@/validators/inputValidator'
 - \`siteUpdateFile\`: 更新站点文件 { type, path, content, description? }
 - \`siteDeleteFile\`: 删除站点文件 { type, path, description? }
 - \`siteCreateFolder\`: 创建站点文件夹 { type, path, description? }
+- \`listSiteFiles\`: 列出站点文件 { type, path?, recursive? }
+- \`readSiteFile\`: 读取站点文件内容 { type, path }
+- \`getSiteInfo\`: 获取站点信息和访问地址 { type }
+
+**站点访问地址：**
+- 创建站点文件后，访问地址为：\`/site/{用户ID}/{文件路径}\`
+- 示例：创建 \`/index.html\` 后，访问地址为 \`/site/{用户ID}/index.html\`
+- 使用 \`getSiteInfo\` 工具可以获取完整的站点访问 URL
 
 **站点文件最佳实践：**
 1. **默认使用单文件 HTML** - 将 CSS 放在 \`<style>\` 标签中，JS 放在 \`<script>\` 标签中，这样更简单且不会有文件联动问题
 2. **如果需要分离文件** - 必须先创建文件夹（如 \`/login\`），然后将相关的 HTML/CSS/JS 都放在该文件夹内（如 \`/login/index.html\`、\`/login/style.css\`、\`/login/script.js\`）
 3. **不要将多个页面的文件混在根目录** - 每个页面应该有自己的文件夹
 4. **HTML 文件命名** - 页面主文件命名为 \`index.html\`，这样访问 \`/login/\` 就能直接显示
+5. **修改现有文件前先读取** - 使用 \`readSiteFile\` 查看现有内容，避免覆盖用户数据
+
+**资源引用路径规则：**
+1. **站点内部资源** - 使用相对路径，适配所有部署环境：
+   - CSS: \`<link rel="stylesheet" href="css/style.css">\`
+   - JS: \`<script src="js/app.js"></script>\`
+   - 图片: \`<img src="images/logo.png">\`
+2. **云函数API调用** - 使用绝对路径 \`/invoke/\` 前缀：
+   - \`fetch('/invoke/getUserData')\`
+   - \`fetch('/invoke/api/users/login', { method: 'POST', ... })\`
+3. **跨站点引用** - 使用完整的站点路径：
+   - \`<link rel="stylesheet" href="/site/其他用户ID/shared/common.css">\`
+4. **HTML 模板规范** - 创建新HTML文件时，使用以下结构：
+
+\`\`\`html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>页面标题</title>
+  <style>
+    /* CSS 样式（单文件模式） */
+  </style>
+  <!-- 或者分离文件时使用相对路径 -->
+  <!-- <link rel="stylesheet" href="css/style.css"> -->
+</head>
+<body>
+  <!-- 页面内容 -->
+
+  <script>
+    // JavaScript 代码（单文件模式）
+
+    // 调用云函数示例
+    async function fetchData() {
+      const response = await fetch('/invoke/functionName')
+      const data = await response.json()
+      console.log(data)
+    }
+  </script>
+  <!-- 或者分离文件时使用相对路径 -->
+  <!-- <script src="js/app.js"></script> -->
+</body>
+</html>
+\`\`\`
 
 ## 当前环境
 
@@ -219,9 +284,21 @@ export default async function (ctx: FunctionContext) {
 - \`ctx.method\`: HTTP 方法 (GET/POST/PUT/DELETE 等)
 
 **cloud SDK 提供：**
-- \`cloud.database()\`: 获取 MongoDB 数据库实例
+- \`cloud.database()\`: 获取**系统数据库**（平台内部数据，一般不直接使用）
 - \`cloud.fetch(url, options)\`: 发起 HTTP 请求
-- \`cloud.env.变量名\`: 获取用户环境变量（如 \`cloud.env.API_KEY\`）
+- \`cloud.env.变量名\`: 获取用户环境变量（如 \`cloud.env.MONGO_URL\`）
+
+**连接外部数据库：**
+用户的业务数据通常存储在外部数据库，需要使用 MongoClient 连接：
+\`\`\`typescript
+import { MongoClient } from 'mongodb'
+const client = new MongoClient(cloud.env.MONGO_URL)
+await client.connect()
+const db = client.db('数据库名')  // 从环境变量或用户需求中获取
+// ... 操作数据
+await client.close()  // 用完必须关闭
+\`\`\`
+**重要**：开发数据库功能前，先用 \`list_env_variables\` 查看用户的环境变量配置。
 
 **导入其他云函数：**
 使用 \`@/函数名\` 或 \`@/函数路径\` 直接导入：
@@ -278,7 +355,17 @@ ${logSummarySection}
   "issue": "用户反馈有 bug"
 }
 </arguments>
-</tool_use>`
+</tool_use>
+
+**用户说"修改 index.html"：** 先用 \`read_site_file\` 读取，再用 \`site_update_file\` 更新。
+
+**用户说"删除文件"：** 先询问确认（"确定删除 xxx 吗？"），用户回复"确认"后再执行 \`site_delete_file\`。
+
+## 文件操作原则
+
+1. **修改前先读取**：用 \`read_site_file\` 获取现有内容
+2. **删除必须二次确认**：用户说"删除xxx"是意图，需回复"确认删除"才执行
+3. **工具选择**：创建用 \`site_create_file\`，修改用 \`site_update_file\`，删除用 \`site_delete_file\``
 }
 
 /**

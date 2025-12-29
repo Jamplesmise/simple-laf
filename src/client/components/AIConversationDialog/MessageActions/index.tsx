@@ -13,8 +13,6 @@ import { Tooltip, message } from 'antd'
 import {
   EditOutlined,
   BranchesOutlined,
-  CopyOutlined,
-  CheckOutlined,
   LikeOutlined,
   DislikeOutlined,
   LikeFilled,
@@ -39,7 +37,6 @@ export function MessageActions({
   onFeedbackChange,
 }: MessageActionsProps) {
   const { t } = useThemeColors()
-  const [copied, setCopied] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(
     msg.feedback || null
@@ -47,18 +44,6 @@ export function MessageActions({
   const [loading, setLoading] = useState(false)
 
   const isUser = msg.role === 'user'
-
-  // 复制消息内容
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(msg.content)
-      setCopied(true)
-      message.success('已复制到剪贴板')
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      message.error('复制失败')
-    }
-  }
 
   // 创建分支
   const handleBranch = async () => {
@@ -145,13 +130,6 @@ export function MessageActions({
             disabled={loading}
           >
             <BranchesOutlined />
-          </button>
-        </Tooltip>
-
-        {/* 复制按钮 */}
-        <Tooltip title={copied ? '已复制' : '复制'}>
-          <button className={styles.actionBtn} onClick={handleCopy}>
-            {copied ? <CheckOutlined style={{ color: t.success }} /> : <CopyOutlined />}
           </button>
         </Tooltip>
       </div>

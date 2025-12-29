@@ -139,9 +139,13 @@ router.post('/:id/chat', async (req: AuthRequest, res: Response) => {
 
     const systemPrompt = getFlexibleSystemPrompt(conversationContext)
 
+    // 截断对话历史，保留最近 N 条消息（防止 token 超限）
+    const MAX_HISTORY_MESSAGES = 20  // 最多保留 20 条历史消息
+    const recentMessages = conversationData.messages.slice(-MAX_HISTORY_MESSAGES)
+
     const messages: aiService.ChatMessage[] = [
       { role: 'system', content: systemPrompt },
-      ...conversationData.messages.map(m => ({
+      ...recentMessages.map(m => ({
         role: m.role as 'user' | 'assistant',
         content: m.content
       })),
@@ -239,9 +243,15 @@ router.post('/:id/chat', async (req: AuthRequest, res: Response) => {
             result: { success: true, message: '分析完成' }
           })}\n\n`)
         } else {
+          // 从请求中获取基础URL
+          const protocol = req.protocol
+          const host = req.get('host')
+          const baseUrl = `${protocol}://${host}`
+
           const executor = new AIExecutor(db, userId, {
             username: req.user!.username,
             modelName,
+            baseUrl,
           })
 
           const executableCalls = aiResponse.toolCalls.filter(call => !analysisTools.includes(call.tool))
