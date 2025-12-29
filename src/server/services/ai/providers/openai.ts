@@ -71,12 +71,21 @@ export class OpenAIProvider extends BaseAIProvider {
     })
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({})) as { error?: { message?: string } }
-      throw new AIProviderError(
-        error.error?.message || `OpenAI API error: ${response.status}`,
-        'OPENAI_ERROR',
-        response.status
-      )
+      const errorText = await response.text().catch(() => '')
+      let errorMessage = `OpenAI API error: ${response.status}`
+      try {
+        const errorJson = JSON.parse(errorText) as { error?: { message?: string; type?: string; code?: string } }
+        if (errorJson.error?.message) {
+          errorMessage = `${errorJson.error.message} (${errorJson.error.type || errorJson.error.code || response.status})`
+        }
+      } catch {
+        // 如果不是 JSON，直接使用文本
+        if (errorText) {
+          errorMessage = `OpenAI API error: ${response.status} - ${errorText.slice(0, 200)}`
+        }
+      }
+      console.error('[OpenAI] API error:', response.status, errorText.slice(0, 500))
+      throw new AIProviderError(errorMessage, 'OPENAI_ERROR', response.status)
     }
 
     const reader = response.body?.getReader()

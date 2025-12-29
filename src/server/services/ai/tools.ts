@@ -272,7 +272,7 @@ export const debugTools: AITool[] = [
 export const siteTools: AITool[] = [
   {
     name: 'site_create_file',
-    description: '创建站点文件。默认使用单文件 HTML（CSS 放 <style>，JS 放 <script>）。如需分离文件，先用 site_create_folder 创建文件夹，再将文件放入该文件夹',
+    description: '创建站点文件。默认使用单文件 HTML（CSS 放 <style>，JS 放 <script>）。如需分离文件，先用 site_create_folder 创建文件夹，再将文件放入该文件夹。资源引用规则：站点内资源用相对路径（如 href="css/style.css"），云函数调用用 /invoke/ 前缀（如 fetch(\'/invoke/functionName\')）',
     parameters: {
       type: 'object',
       properties: {
@@ -282,7 +282,7 @@ export const siteTools: AITool[] = [
         },
         content: {
           type: 'string',
-          description: '文件内容。HTML 文件应包含完整的 DOCTYPE、head、body，CSS/JS 默认内联',
+          description: '文件内容。HTML 文件应包含完整的 DOCTYPE、head、body，CSS/JS 默认内联。站点内资源使用相对路径，云函数调用使用 /invoke/ 前缀',
         },
         description: {
           type: 'string',
@@ -294,7 +294,7 @@ export const siteTools: AITool[] = [
   },
   {
     name: 'site_update_file',
-    description: '更新站点文件内容。当用户要求修改现有的静态文件时使用',
+    description: '更新站点文件内容。当用户要求修改现有的静态文件时使用。修改前建议使用 read_site_file 读取现有内容',
     parameters: {
       type: 'object',
       properties: {
@@ -304,7 +304,7 @@ export const siteTools: AITool[] = [
         },
         content: {
           type: 'string',
-          description: '新的文件内容',
+          description: '新的文件内容。保持资源引用路径规则：站点内资源用相对路径，云函数调用用 /invoke/ 前缀',
         },
         description: {
           type: 'string',
@@ -344,6 +344,47 @@ export const siteTools: AITool[] = [
         },
       },
       required: ['path'],
+    },
+  },
+  {
+    name: 'list_site_files',
+    description: '列出站点文件。查看用户已创建的所有静态文件和文件夹结构',
+    parameters: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: '目录路径（可选，默认 "/"）。指定路径可查看特定目录下的文件',
+        },
+        recursive: {
+          type: 'boolean',
+          description: '是否递归列出子目录（默认 true）',
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'read_site_file',
+    description: '读取站点文件内容。当需要查看或修改现有静态文件时使用',
+    parameters: {
+      type: 'object',
+      properties: {
+        path: {
+          type: 'string',
+          description: '要读取的文件路径，如 "/index.html"',
+        },
+      },
+      required: ['path'],
+    },
+  },
+  {
+    name: 'get_site_info',
+    description: '获取站点信息和访问地址。查看站点配置、统计信息和完整的访问URL',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: [],
     },
   },
 ]
@@ -888,6 +929,9 @@ export const toolToOperationType: Record<string, string> = {
   site_update_file: 'siteUpdateFile',
   site_delete_file: 'siteDeleteFile',
   site_create_folder: 'siteCreateFolder',
+  list_site_files: 'listSiteFiles',
+  read_site_file: 'readSiteFile',
+  get_site_info: 'getSiteInfo',
   // 项目文件操作
   read_project_file: 'readProjectFile',
   write_project_file: 'writeProjectFile',

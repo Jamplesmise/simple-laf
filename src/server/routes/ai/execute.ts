@@ -99,9 +99,15 @@ router.post('/execute', async (req: AuthRequest, res: Response) => {
         modelName = model?.name as string || model?.alias as string
       }
 
+      // 从请求中获取基础URL
+      const protocol = req.protocol
+      const host = req.get('host')
+      const baseUrl = `${protocol}://${host}`
+
       const executor = new AIExecutor(db, userId, {
         username: req.user!.username,
         modelName,
+        baseUrl,
       })
       const plan = executor.parsePlan(fullContent)
 
@@ -227,8 +233,14 @@ router.post('/preview', async (req: AuthRequest, res: Response) => {
 
     const response = await aiService.chat(userId, messages)
 
+    // 从请求中获取基础URL
+    const protocol = req.protocol
+    const host = req.get('host')
+    const baseUrl = `${protocol}://${host}`
+
     const executor = new AIExecutor(db, userId, {
       username: req.user!.username,
+      baseUrl,
     })
     const plan = executor.parsePlan(response.content)
 

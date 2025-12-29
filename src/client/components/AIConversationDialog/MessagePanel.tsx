@@ -8,7 +8,8 @@
 
 import { useRef, useEffect, useState } from 'react'
 import { Spin, Avatar } from 'antd'
-import { UserOutlined, RobotOutlined, MessageOutlined } from '@ant-design/icons'
+import { UserOutlined, MessageOutlined } from '@ant-design/icons'
+import { Sparkles } from 'lucide-react'
 import { useThemeColors } from '@/hooks/useTheme'
 import type { AIMessage } from '@/api/aiConversation'
 import { MessageContent } from './MessageContent'
@@ -117,26 +118,28 @@ function MessageItem({ message, onEditSuccess, onBranchSuccess }: MessageItemPro
     <div className={styles.messageItem}>
       <Avatar
         className={`${styles.messageAvatar} ${isUser ? styles.userAvatar : styles.assistantAvatar}`}
-        icon={isUser ? <UserOutlined /> : <RobotOutlined />}
+        icon={isUser ? <UserOutlined /> : <Sparkles size={16} />}
         style={{
           background: isUser ? t.accent : t.bgMuted,
           color: isUser ? 'white' : t.textSecondary,
         }}
       />
-      <div className={styles.messageContent}>
-        {isUser ? (
-          <div className={styles.messageText}>{message.content}</div>
-        ) : (
-          <MessageContent content={message.content} messageId={message._id} />
-        )}
-      </div>
-      {/* Sprint 10.2: 消息操作按钮 */}
-      <div className={styles.messageActions}>
-        <MessageActions
-          message={message}
-          onEditSuccess={onEditSuccess}
-          onBranchSuccess={onBranchSuccess}
-        />
+      <div className={styles.messageBody}>
+        <div className={styles.messageContent}>
+          {isUser ? (
+            <div className={styles.messageText}>{message.content}</div>
+          ) : (
+            <MessageContent content={message.content} messageId={message._id} />
+          )}
+        </div>
+        {/* Sprint 10.2: 消息操作按钮 - 放在消息末尾 */}
+        <div className={styles.messageActions}>
+          <MessageActions
+            message={message}
+            onEditSuccess={onEditSuccess}
+            onBranchSuccess={onBranchSuccess}
+          />
+        </div>
       </div>
     </div>
   )
@@ -152,7 +155,7 @@ function StreamingMessage({ content, status }: { content: string; status: string
     <div className={styles.messageItem}>
       <Avatar
         className={`${styles.messageAvatar} ${styles.assistantAvatar}`}
-        icon={<RobotOutlined />}
+        icon={<Sparkles size={16} />}
         style={{ background: t.bgMuted, color: t.textSecondary }}
       />
       <div className={styles.messageContent}>

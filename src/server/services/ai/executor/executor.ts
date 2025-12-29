@@ -26,6 +26,7 @@ import * as testOps from './operations/test.js'
 export interface AIExecutorOptions {
   username: string
   modelName?: string
+  baseUrl?: string  // 基础URL，用于生成站点访问地址等
 }
 
 /**
@@ -35,6 +36,7 @@ export interface AIExecutorOptions {
 export class AIExecutor {
   private username: string
   private modelName?: string
+  private baseUrl?: string
 
   constructor(
     private db: Db,
@@ -43,6 +45,14 @@ export class AIExecutor {
   ) {
     this.username = options?.username || 'unknown'
     this.modelName = options?.modelName
+    this.baseUrl = options?.baseUrl
+  }
+
+  /**
+   * 获取基础URL
+   */
+  getBaseUrl(): string | undefined {
+    return this.baseUrl
   }
 
   /**
@@ -122,13 +132,19 @@ export class AIExecutor {
 
         // 站点文件操作
         case 'siteCreateFile':
-          return await siteOps.siteCreateFile(operation, { userId: this.userId })
+          return await siteOps.siteCreateFile(operation, { userId: this.userId, baseUrl: this.baseUrl })
         case 'siteUpdateFile':
-          return await siteOps.siteUpdateFile(operation, { userId: this.userId })
+          return await siteOps.siteUpdateFile(operation, { userId: this.userId, baseUrl: this.baseUrl })
         case 'siteDeleteFile':
-          return await siteOps.siteDeleteFile(operation, { userId: this.userId })
+          return await siteOps.siteDeleteFile(operation, { userId: this.userId, baseUrl: this.baseUrl })
         case 'siteCreateFolder':
-          return await siteOps.siteCreateFolder(operation, { userId: this.userId })
+          return await siteOps.siteCreateFolder(operation, { userId: this.userId, baseUrl: this.baseUrl })
+        case 'listSiteFiles':
+          return await siteOps.listSiteFiles(operation, { userId: this.userId, baseUrl: this.baseUrl })
+        case 'readSiteFile':
+          return await siteOps.readSiteFile(operation, { userId: this.userId, baseUrl: this.baseUrl })
+        case 'getSiteInfo':
+          return await siteOps.getSiteInfo(operation, { userId: this.userId, baseUrl: this.baseUrl })
 
         // 项目文件操作
         case 'readProjectFile':

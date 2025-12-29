@@ -409,16 +409,21 @@
 
 .messageItem {
   display: flex;
-  gap: 16px;
-  margin-bottom: 28px;
+  gap: 12px;
+  margin-bottom: 20px;
   position: relative;
 }
 
-/* Sprint 10.2: 消息操作按钮容器 */
+.messageBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sprint 10.2: 消息操作按钮容器 - 放在消息末尾 */
 .messageActions {
-  position: absolute;
-  right: 0;
-  top: 0;
+  margin-top: 8px;
   opacity: 0;
   transition: opacity 0.15s ease;
 }
@@ -459,11 +464,58 @@
 }
 
 .messageText {
-  font-size: 15px;
-  line-height: 1.7;
+  font-size: 14px;
+  line-height: 1.5;
   color: var(--slate-800);
-  white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* 强制覆盖 Markdown 内所有元素间距 */
+.messageText p,
+.messageText h1,
+.messageText h2,
+.messageText h3,
+.messageText h4,
+.messageText h5,
+.messageText h6,
+.messageText ul,
+.messageText ol,
+.messageText li,
+.messageText blockquote,
+.messageText pre,
+.messageText table {
+  margin: 0;
+  padding: 0;
+}
+
+.messageText p {
+  margin-bottom: 3px;
+}
+
+.messageText h1,
+.messageText h2,
+.messageText h3 {
+  margin-top: 9px;
+  margin-bottom: 3px;
+  font-weight: 600;
+}
+
+.messageText h1 { font-size: 1.15em; }
+.messageText h2 { font-size: 1.1em; }
+.messageText h3 { font-size: 1.05em; }
+
+.messageText ul,
+.messageText ol {
+  padding-left: 20px;
+  margin: 3px 0;
+}
+
+.messageText li {
+  line-height: 1.5;
+}
+
+.messageText li + li {
+  margin-top: 2px;
 }
 
 /* ============================================
@@ -1222,4 +1274,139 @@
 :global(.dark) .conversationMoreBtn:hover {
   background: rgba(255, 255, 255, 0.05);
   color: #94a3b8;
+}
+
+/* ============================================
+   Markdown 渲染样式
+   ============================================ */
+
+/* 行内代码 */
+.inlineCode {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+  font-size: 0.9em;
+  color: #c7254e;
+}
+
+:global(.dark) .inlineCode {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f472b6;
+}
+
+/* 段落 */
+.markdownP {
+  margin: 0 0 2px 0;
+  line-height: 1.5;
+}
+
+.markdownP:last-child {
+  margin-bottom: 0;
+}
+
+/* 标题 */
+.markdownH1 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 8px 0 4px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.markdownH2 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 6px 0 2px 0;
+}
+
+.markdownH3 {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 4px 0 2px 0;
+}
+
+.markdownH4 {
+  font-size: 0.95em;
+  font-weight: 600;
+  margin: 2px 0 2px 0;
+}
+
+:global(.dark) .markdownH1 {
+  border-bottom-color: #374151;
+}
+
+/* 列表 */
+.markdownUl,
+.markdownOl {
+  margin: 2px 0;
+  padding-left: 18px;
+}
+
+.markdownLi {
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* 引用块 */
+.markdownBlockquote {
+  margin: 4px 0;
+  padding: 8px 16px;
+  border-left: 4px solid var(--emerald-600);
+  background: rgba(5, 150, 105, 0.05);
+  border-radius: 0 8px 8px 0;
+  color: #4b5563;
+}
+
+:global(.dark) .markdownBlockquote {
+  background: rgba(5, 150, 105, 0.1);
+  color: #9ca3af;
+}
+
+/* 表格 */
+.markdownTable {
+  width: 100%;
+  margin: 4px 0;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.markdownTable th,
+.markdownTable td {
+  padding: 4px 8px;
+  border: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.markdownTable th {
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+:global(.dark) .markdownTable th,
+:global(.dark) .markdownTable td {
+  border-color: #374151;
+}
+
+:global(.dark) .markdownTable th {
+  background: #1f2937;
+}
+
+/* 链接 */
+.markdownLink {
+  color: var(--emerald-600);
+  text-decoration: none;
+}
+
+.markdownLink:hover {
+  text-decoration: underline;
+}
+
+/* 粗体和斜体 */
+.markdownStrong {
+  font-weight: 600;
+}
+
+.markdownEm {
+  font-style: italic;
 }

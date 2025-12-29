@@ -21,6 +21,8 @@ import {
   SplitCellsOutlined, MergeCellsOutlined, ToolOutlined, EyeOutlined,
   FileOutlined, CodeOutlined, GlobalOutlined
 } from '@ant-design/icons'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useThemeColors } from '@/hooks/useTheme'
 import { parseAIResponse, codeFont, type AIOperation } from './utils'
 import { HTMLPreview, ReactPreview, MermaidPreview, SVGPreview } from '../AI/Artifacts'
@@ -232,7 +234,7 @@ function OperationCard({ operation }: { operation: AIOperation }) {
     }
   }
 
-  return (
+  const cardContent = (
     <div
       className={`${styles.artifactCard} ${hasCode ? styles.artifactClickable : ''}`}
       style={{
@@ -280,11 +282,6 @@ function OperationCard({ operation }: { operation: AIOperation }) {
           </div>
           {operation.description && (
             <div className={styles.artifactDesc}>{operation.description}</div>
-          )}
-          {hasCode && (
-            <div style={{ fontSize: 11, color: t.textSecondary, marginTop: 4 }}>
-              {getLineCount()} 行代码
-            </div>
           )}
         </div>
 
@@ -368,85 +365,105 @@ function OperationCard({ operation }: { operation: AIOperation }) {
       )}
     </div>
   )
+
+  // 有代码时显示行数悬浮提示
+  if (hasCode) {
+    return (
+      <Tooltip title={`${getLineCount()} 行代码`} placement="top">
+        {cardContent}
+      </Tooltip>
+    )
+  }
+
+  return cardContent
 }
 
 /**
- * 文本内容（含代码块解析）
+ * 文本内容（Markdown 渲染）
  */
 function TextContent({ content, messageId }: { content: string; messageId: string }) {
-  // 解析代码块
-  const parts = parseCodeBlocks(content)
-
   return (
     <div className={styles.messageText}>
-      {parts.map((part, idx) => {
-        if (part.type === 'code') {
-          return (
-            <CodeBlock
-              key={`${messageId}-code-${idx}`}
-              code={part.content}
-              language={part.language}
-              fileName={part.fileName}
-            />
-          )
-        }
-        // 文本内容保留换行
-        return (
-          <span
-            key={`${messageId}-text-${idx}`}
-            style={{ whiteSpace: 'pre-wrap' }}
-          >
-            {part.content}
-          </span>
-        )
-      })}
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          // 自定义代码块渲染，支持预览功能
+          code({ node, className, children, ...props }) {
+            const match = /language-(\w+)(?::(.+))?/.exec(className || '')
+            const isInline = !match && !String(children).includes('\n')
+
+            if (isInline) {
+              return (
+                <code className={styles.inlineCode} {...props}>
+                  {children}
+                </code>
+              )
+            }
+
+            // 解析语言和文件名
+            const language = match?.[1] || 'plaintext'
+            const fileName = match?.[2]?.trim()
+            const code = String(children).replace(/\n$/, '')
+
+            return (
+              <CodeBlock
+                key={`${messageId}-code-${Math.random()}`}
+                code={code}
+                language={language}
+                fileName={fileName}
+              />
+            )
+          },
+          // 自定义其他元素样式
+          p({ children }) {
+            return <p className={styles.markdownP}>{children}</p>
+          },
+          ul({ children }) {
+            return <ul className={styles.markdownUl}>{children}</ul>
+          },
+          ol({ children }) {
+            return <ol className={styles.markdownOl}>{children}</ol>
+          },
+          li({ children }) {
+            return <li className={styles.markdownLi}>{children}</li>
+          },
+          h1({ children }) {
+            return <h1 className={styles.markdownH1}>{children}</h1>
+          },
+          h2({ children }) {
+            return <h2 className={styles.markdownH2}>{children}</h2>
+          },
+          h3({ children }) {
+            return <h3 className={styles.markdownH3}>{children}</h3>
+          },
+          h4({ children }) {
+            return <h4 className={styles.markdownH4}>{children}</h4>
+          },
+          blockquote({ children }) {
+            return <blockquote className={styles.markdownBlockquote}>{children}</blockquote>
+          },
+          table({ children }) {
+            return <table className={styles.markdownTable}>{children}</table>
+          },
+          a({ href, children }) {
+            return (
+              <a href={href} target="_blank" rel="noopener noreferrer" className={styles.markdownLink}>
+                {children}
+              </a>
+            )
+          },
+          strong({ children }) {
+            return <strong className={styles.markdownStrong}>{children}</strong>
+          },
+          em({ children }) {
+            return <em className={styles.markdownEm}>{children}</em>
+          },
+        }}
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   )
-}
-
-interface TextPart {
-  type: 'text' | 'code'
-  content: string
-  language?: string
-  fileName?: string
-}
-
-function parseCodeBlocks(content: string): TextPart[] {
-  const parts: TextPart[] = []
-  // 支持 ```language:filename 格式提取文件名
-  const codeBlockRegex = /```(\w*)(?::([^\n]+))?\n([\s\S]*?)```/g
-  let lastIndex = 0
-  let match
-
-  while ((match = codeBlockRegex.exec(content)) !== null) {
-    // 代码块之前的文本
-    if (match.index > lastIndex) {
-      parts.push({
-        type: 'text',
-        content: content.slice(lastIndex, match.index)
-      })
-    }
-
-    // 代码块
-    parts.push({
-      type: 'code',
-      language: match[1] || 'plaintext',
-      fileName: match[2]?.trim(),
-      content: match[3]
-    })
-
-    lastIndex = match.index + match[0].length
-  }
-
-  // 最后的文本
-  if (lastIndex < content.length) {
-    parts.push({
-      type: 'text',
-      content: content.slice(lastIndex)
-    })
-  }
-
-  return parts
 }
 
 /**

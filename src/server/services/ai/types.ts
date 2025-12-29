@@ -157,6 +157,9 @@ export type AIOperationType =
   | 'siteUpdateFile'    // 更新站点文件
   | 'siteDeleteFile'    // 删除站点文件
   | 'siteCreateFolder'  // 创建站点文件夹
+  | 'listSiteFiles'     // 列出站点文件
+  | 'readSiteFile'      // 读取站点文件
+  | 'getSiteInfo'       // 获取站点信息
   // 项目文件操作 (Sprint 14)
   | 'readProjectFile'   // 读取项目文件
   | 'writeProjectFile'  // 写入项目文件
@@ -262,6 +265,24 @@ export interface SiteDeleteFileOperation extends AIOperationBase {
 export interface SiteCreateFolderOperation extends AIOperationBase {
   type: 'siteCreateFolder'
   path: string            // 文件夹路径，如 "/css"
+}
+
+// 列出站点文件操作
+export interface ListSiteFilesOperation extends AIOperationBase {
+  type: 'listSiteFiles'
+  path?: string           // 目录路径（可选，默认 "/"）
+  recursive?: boolean     // 是否递归（默认 true）
+}
+
+// 读取站点文件操作
+export interface ReadSiteFileOperation extends AIOperationBase {
+  type: 'readSiteFile'
+  path: string            // 文件路径
+}
+
+// 获取站点信息操作
+export interface GetSiteInfoOperation extends AIOperationBase {
+  type: 'getSiteInfo'
 }
 
 // ==================== 项目文件操作 (Sprint 14) ====================
@@ -467,6 +488,9 @@ export type AIOperation =
   | SiteUpdateFileOperation
   | SiteDeleteFileOperation
   | SiteCreateFolderOperation
+  | ListSiteFilesOperation
+  | ReadSiteFileOperation
+  | GetSiteInfoOperation
   | ReadProjectFileOperation
   | WriteProjectFileOperation
   | GetFileTreeOperation
